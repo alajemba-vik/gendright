@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">GendRight</string>
+    <string name="gendright_accessibility_service_description">
+        GendRight uses the Android Accessibility service to process your text and provide you with
+        writing suggestions. We don\'t and will not sell your data.
+        \n\nGendRight uses the following Accessibility capabilities:\n\nRetrieve your typed text:\n\n
+        This is required for GendRight to provide writing suggestions in supported apps.\n\nDetect
+        window changed:\n\nThis is required to turn GendRight on or off when you\'re typing in apps.
+        \n\nEnabling the shortcut toggle on this screen is NOT required.</string>
 </resources>
