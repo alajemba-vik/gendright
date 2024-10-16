@@ -1,7 +1,9 @@
 package com.alaje.gendright.accessibility
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
@@ -9,9 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 
 class GendRightService: AccessibilityService() {
@@ -24,49 +24,55 @@ class GendRightService: AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
 
-        TODO("Launch the app and let the user know what they can do with GendRight")
+        //TODO("Launch the app and let the user know what they can do with GendRight")
+        serviceInfo.apply {
+
+            eventTypes = AccessibilityEvent.TYPE_VIEW_FOCUSED or AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED or AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT
+
+            feedbackType = AccessibilityServiceInfo.FEEDBACK_VISUAL
+
+            flags = AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS or AccessibilityServiceInfo.CAPABILITY_CAN_RETRIEVE_WINDOW_CONTENT
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                flags = flags or AccessibilityServiceInfo.FLAG_INPUT_METHOD_EDITOR or
+                        AccessibilityServiceInfo.FLAG_REQUEST_ACCESSIBILITY_BUTTON
+            }
+
+            notificationTimeout = 300
+        }
+
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         //"Check if it's an input text change event and access Gemini API"
         event?.source?.apply {
-            if (event.eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED) {
+            if (event.eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED || event.eventType == AccessibilityEvent.TYPE_VIEW_FOCUSED) {
 
-                coroutineScope.cancel()
-                coroutineScope.launch {
+                val transformedTextArguments = Bundle()
+                var transformedText = ""
 
-                    delay(1000)
-                    val transformedTextArguments = Bundle()
-                    var transformedText = "Safe text";
+                if (isEditable && isVisibleToUser && isFocused) {
+                    val text = text.toString()
 
-                    if (isEditable && isVisibleToUser && isFocused) {
-                        val text = text.toString()
+                    if (text.isBlank() || !text.contains( " ")) return
 
-                        if (text.isBlank()) return@launch
-
+                    coroutineScope.launch {
                         // Check if the text has been transformed before and use the cached data
                         val cachedData = textFieldsCache[text]
                         if (cachedData != null) {
                             // Set the cached data
                             transformedText = cachedData
                         } else {
-                            //TODO("Make API call to Gemini API")
+
+                            //TODO("Make API call to Gemini API and assign new value to")
+
 
                             // Cache the transformed text
                             textFieldsCache[text] = transformedText
                         }
 
-                        transformedTextArguments.putCharSequence(
-                            AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
-                            transformedText
-                        )
 
-                        withContext(Dispatchers.Main) {
-                            performAction(
-                                AccessibilityNodeInfo.ACTION_SET_TEXT,
-                                transformedTextArguments
-                            )
-                        }
+                        updateInput(transformedTextArguments, transformedText)
                     }
                 }
             }
@@ -76,12 +82,42 @@ class GendRightService: AccessibilityService() {
 
     }
 
+    private fun AccessibilityNodeInfo.updateInput(
+        transformedTextArguments: Bundle,
+        transformedText: String
+    ) {
+        transformedTextArguments.putCharSequence(
+            AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+            transformedText
+        )
+
+        performAction(
+            AccessibilityNodeInfo.ACTION_SET_TEXT,
+            transformedTextArguments
+        )
+    }
+
     override fun onInterrupt() {
-        TODO("Stop the API call")
+        job.cancel()
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
+        coroutineScope.cancel()
         return super.onUnbind(intent)
-        TODO("Clean up")
+
     }
+
+    /*private fun getTextFieldNodeInfo(source: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+        var current = source
+        while (true) {
+            val parent = current.parent ?: return null
+            if (TASK_LIST_VIEW_CLASS_NAME.equals(parent.className)) {
+                return current
+            }
+            // NOTE: Recycle the infos.
+            val oldCurrent = current
+            current = parent
+        }
+    }*/
+
 }
