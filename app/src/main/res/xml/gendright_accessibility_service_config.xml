@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/gendright_accessibility_service_description"
-    android:accessibilityEventTypes="typeViewFocused|typeWindowStateChanged"
+    android:accessibilityEventTypes="typeViewFocused|typeViewTextChanged|typeWindowContentChanged"
     android:accessibilityFlags="flagInputMethodEditor|flagRetrieveInteractiveWindows|flagRequestAccessibilityButton"
     android:accessibilityFeedbackType="feedbackVisual"
-    android:notificationTimeout="1000"
+    android:notificationTimeout="300"
     android:settingsActivity="com.alaje.gendright.MainActivity"
+    android:canRetrieveWindowContent="true"
     />
 
