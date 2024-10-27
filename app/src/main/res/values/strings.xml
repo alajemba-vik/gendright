@@ -8,4 +8,6 @@
         window changed:\n\nThis is required to turn GendRight on or off when you\'re typing in apps.
         \n\nEnabling the shortcut toggle on this screen is NOT required.</string>
     <string name="floating_widget_content_desc">Gendright floating widget</string>
+    <string name="accept_suggestion_positive_button_text">Accept</string>
+    <string name="accept_suggestion_negative_button_text">Deny</string>
 </resources>
