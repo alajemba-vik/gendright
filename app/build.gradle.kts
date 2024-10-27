@@ -1,7 +1,17 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
 }
+
+val gendRightPropertiesFile = rootProject.file("gendright.properties")
+val gendRightProperties = Properties().apply {
+    if (gendRightPropertiesFile.exists()) {
+        load(gendRightPropertiesFile.inputStream())
+    }
+}
+val geminiAPIkey = gendRightProperties.getProperty("geminiAPIkey")
 
 android {
     namespace = "com.alaje.gendright"
@@ -18,6 +28,12 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField(
+            "String",
+            "geminiAPIkey",
+            "\"$geminiAPIkey\""
+        )
     }
 
     buildTypes {
@@ -38,6 +54,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -66,4 +83,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    implementation(libs.google.ai.client.generativeai)
 }
