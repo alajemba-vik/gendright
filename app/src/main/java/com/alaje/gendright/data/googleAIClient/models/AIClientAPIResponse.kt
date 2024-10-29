@@ -1,6 +1,6 @@
-package com.alaje.gendright.googleAIClient.models
+package com.alaje.gendright.data.googleAIClient.models
 
-import com.alaje.gendright.googleAIClient.parseJsonObject
+import com.alaje.gendright.utils.parseJsonObject
 
 data class AIClientAPIResponse(
     val rating: Int,
@@ -13,15 +13,15 @@ data class AIClientAPIResponse(
                 json
             ) { jsonObject ->
                 AIClientAPIResponse(
-                    jsonObject.getInt("rating"),
-                    jsonObject.getJSONArray("suggestions").let { suggestionsProperty ->
+                    jsonObject.optInt("rating"),
+                    jsonObject.optJSONArray("suggestions")?.let { suggestionsProperty ->
                         val suggestions = mutableListOf<String>()
                         for (i in 0 until suggestionsProperty.length()) {
                             suggestions.add(suggestionsProperty.getString(i))
                         }
                         suggestions
-                    },
-                    jsonObject.getString("reasoning")
+                    } ?: emptyList(),
+                    jsonObject.optString("reasoning")
                 )
             }
         }

@@ -21,12 +21,14 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.core.view.isVisible
 import com.alaje.gendright.R
+import com.alaje.gendright.data.models.DataResponse
 import com.alaje.gendright.di.AppContainer
 import com.alaje.gendright.utils.ScreenUtils
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -34,8 +36,12 @@ import kotlinx.coroutines.withContext
 class GendRightService: AccessibilityService() {
     private var textFieldsCache: MutableMap<String, String> = mutableMapOf()
 
-    private var job = Job()
-    private var coroutineScope = CoroutineScope(Dispatchers.IO + job)
+    private var job: Job = Job()
+
+    val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        throwable.printStackTrace()
+    }
+    private var coroutineScope = CoroutineScope(Dispatchers.IO + coroutineExceptionHandler)
 
     private var floatingWidget: View? = null
     private var floatingWidgetAnimator: ObjectAnimator? = null
@@ -84,10 +90,13 @@ class GendRightService: AccessibilityService() {
 
                     if (text.isBlank() || !text.contains( " ") || text.split(" ").isEmpty()) return
 
-                    coroutineScope.launch {
+                    job.cancel()
+                    job = coroutineScope.launch {
+                        delay(1000)
+
                         // Check if the text has been transformed before and use the cached data
                         val cachedData = textFieldsCache[text]
-                        if (cachedData != null) {
+                        if (!cachedData.isNullOrBlank()) {
                             // Set the cached data
                             suggestion = cachedData
                         } else {
@@ -96,8 +105,22 @@ class GendRightService: AccessibilityService() {
                             }
 
                             Log.d("GendRightService", "Processing text: $text")
-                            AppContainer.instance.aiClientAPIService.processText(text)?.let {
-                                suggestion = it.suggestions.firstOrNull() ?: ""
+                            AppContainer.instance.aiClientAPIService.processText(text).let {
+                                when (it) {
+                                    is DataResponse.Success -> {
+                                        suggestion = it.data.suggestions.firstOrNull() ?: ""
+                                    }
+
+                                    is DataResponse.NetworkError -> {
+                                        //TODO
+                                        Log.d("GendRightService", "Network Error")
+                                    }
+
+                                    else -> {
+                                        //TODO
+                                        Log.d("GendRightService", "API Error")
+                                    }
+                                }
                             }
                             Log.d("GendRightService", "Suggestion: $suggestion")
 
@@ -125,7 +148,7 @@ class GendRightService: AccessibilityService() {
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        coroutineScope.cancel()
+        job.cancel()
         return super.onUnbind(intent)
     }
 
@@ -226,6 +249,11 @@ class GendRightService: AccessibilityService() {
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             android.graphics.PixelFormat.TRANSLUCENT
         )
+
+        floatingWidget?.rootView?.let {
+            params.height = 500
+        }
+
         params.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
         params.x = 0
 
@@ -248,8 +276,6 @@ class GendRightService: AccessibilityService() {
                 suggestionsLayout?.visibility = View.GONE
             }
         }
-
-
 
     }
 
