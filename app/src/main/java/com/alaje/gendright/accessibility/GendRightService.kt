@@ -105,7 +105,7 @@ class GendRightService: AccessibilityService() {
                             }
 
                             Log.d("GendRightService", "Processing text: $text")
-                            AppContainer.instance.aiClientAPIService.processText(text).let {
+                            AppContainer.instance?.aiClientAPIService?.processText(text).let {
                                 when (it) {
                                     is DataResponse.Success -> {
                                         suggestion = it.data.suggestions.firstOrNull() ?: ""
