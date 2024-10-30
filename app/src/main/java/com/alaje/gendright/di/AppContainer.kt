@@ -1,11 +1,20 @@
 package com.alaje.gendright.di
 
+import android.content.Context
 import com.alaje.gendright.data.googleAIClient.AIClientAPIService
+import com.alaje.gendright.data.local.LocalDataSource
 
-class AppContainer {
+class AppContainer(
+    context: Context
+) {
     val aiClientAPIService = AIClientAPIService()
+    val localDataSource = LocalDataSource(context)
 
     companion object {
-        val instance = AppContainer()
+        var instance: AppContainer? = null
+
+        fun initAppContainer(context: Context) {
+            instance = AppContainer(context)
+        }
     }
 }
