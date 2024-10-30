@@ -35,7 +35,11 @@ fun GendrightNavHost() {
         }
 
         composable(NavigationActions.quickTest) {
-            QuickTestScreen()
+            QuickTestScreen(
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

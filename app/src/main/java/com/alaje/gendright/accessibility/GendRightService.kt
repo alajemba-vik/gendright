@@ -8,7 +8,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -20,8 +19,7 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.core.view.isVisible
 import com.alaje.gendright.R
-import com.alaje.gendright.data.models.DataResponse
-import com.alaje.gendright.di.AppContainer
+import com.alaje.gendright.utils.BiasReader
 import com.alaje.gendright.utils.ScreenUtils
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -33,8 +31,7 @@ import kotlinx.coroutines.withContext
 
 
 class GendRightService: AccessibilityService() {
-    private var textFieldsCache: MutableMap<String, String> = mutableMapOf()
-
+    private val biasReader = BiasReader()
     private var job: Job = Job()
 
     val coroutineExceptionHandler = CoroutineExceptionHandler { _, throwable ->
@@ -45,7 +42,9 @@ class GendRightService: AccessibilityService() {
     private var floatingWidget: View? = null
     private var floatingWidgetAnimator: ObjectAnimator? = null
     private var suggestionsLayout: View? = null
-    private var suggestionDisplayTextView: TextView? = null
+    private var suggestionTextView1: TextView? = null
+    private var suggestionTextView2: TextView? = null
+    private var suggestionTextView3: TextView? = null
 
     private lateinit var windowManager: WindowManager
 
@@ -54,7 +53,6 @@ class GendRightService: AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
 
-        //TODO("Launch the app and let the user know what they can do with GendRight")
         serviceInfo.apply {
 
             eventTypes = AccessibilityEvent.TYPE_VIEW_FOCUSED or AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED or AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT
@@ -71,14 +69,25 @@ class GendRightService: AccessibilityService() {
             notificationTimeout = 300
         }
 
+        coroutineScope.launch {
+            biasReader.isProcessing.collect {
+                withContext(Dispatchers.Main) {
+                    if (it) {
+                        floatingWidgetAnimator?.start()
+                    } else {
+                        floatingWidgetAnimator?.end()
+                    }
+                }
+            }
+        }
+
+
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         //"Check if it's an input text change event and access Gemini API"
         event?.source?.apply {
             if (event.eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED || event.eventType == AccessibilityEvent.TYPE_VIEW_FOCUSED) {
-
-                var suggestion = ""
 
                 if (isEditable && isVisibleToUser && isFocused) {
                     if (floatingWidget?.isVisible != true && Settings.canDrawOverlays(this@GendRightService)){
@@ -87,52 +96,17 @@ class GendRightService: AccessibilityService() {
 
                     val text = text.toString()
 
-                    if (text.isBlank() || !text.contains( " ") || text.split(" ").isEmpty()) return
+                    if (text.trim().contains(" ")) {
 
-                    job.cancel()
-                    job = coroutineScope.launch {
-                        delay(1000)
+                        job.cancel()
 
-                        // Check if the text has been transformed before and use the cached data
-                        val cachedData = textFieldsCache[text]
-                        if (!cachedData.isNullOrBlank()) {
-                            // Set the cached data
-                            suggestion = cachedData
-                        } else {
-                            withContext(Dispatchers.Main){
-                                floatingWidgetAnimator?.start()
-                            }
+                        job = coroutineScope.launch {
+                            delay(1000)
 
-                            Log.d("GendRightService", "Processing text: $text")
-                            AppContainer.instance?.aiClientAPIService?.processText(text).let {
-                                when (it) {
-                                    is DataResponse.Success -> {
-                                        suggestion = it.data.suggestions.firstOrNull() ?: ""
-                                    }
+                            biasReader.readText(text)
 
-                                    is DataResponse.NetworkError -> {
-                                        //TODO
-                                        Log.d("GendRightService", "Network Error")
-                                    }
-
-                                    else -> {
-                                        //TODO
-                                        Log.d("GendRightService", "API Error")
-                                    }
-                                }
-                            }
-                            Log.d("GendRightService", "Suggestion: $suggestion")
-
-
-                            withContext(Dispatchers.Main){
-                                floatingWidgetAnimator?.end()
-                            }
-
-                            // Cache the transformed text
-                            textFieldsCache[text] = suggestion
+                            lastEventAccessibilityNodeInfo = this@apply
                         }
-
-                        lastEventAccessibilityNodeInfo = this@apply
                     }
                 }
             }
@@ -260,9 +234,15 @@ class GendRightService: AccessibilityService() {
         windowManager.addView(suggestionsLayout, params)
 
         suggestionsLayout?.apply {
-            suggestionDisplayTextView = findViewById(R.id.suggestion_text_view)
+            suggestionTextView1 = findViewById(R.id.suggestion_1)
+            suggestionTextView2 = findViewById(R.id.suggestion_2)
+            suggestionTextView3 = findViewById(R.id.suggestion_3)
 
-            suggestionDisplayTextView?.text = textFieldsCache[lastEventAccessibilityNodeInfo?.text.toString()]
+            val apiResponse =
+                biasReader.textFieldsCache[lastEventAccessibilityNodeInfo?.text.toString()]
+            suggestionTextView1?.text = apiResponse?.suggestions?.firstOrNull() ?: ""
+            suggestionTextView2?.text = apiResponse?.suggestions?.getOrNull(1) ?: ""
+            suggestionTextView3?.text = apiResponse?.suggestions?.getOrNull(2) ?: ""
 
             findViewById<Button>(R.id.accept_suggestion_negative_button)?.setOnClickListener {
                 suggestionsLayout?.visibility = View.GONE
@@ -270,7 +250,7 @@ class GendRightService: AccessibilityService() {
 
             findViewById<Button>(R.id.accept_suggestion_positive_button)?.setOnClickListener {
                 lastEventAccessibilityNodeInfo?.updateInput(
-                    suggestionDisplayTextView?.text.toString()
+                    suggestionTextView1?.text.toString()
                 )
                 suggestionsLayout?.visibility = View.GONE
             }

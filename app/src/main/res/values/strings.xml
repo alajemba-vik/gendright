@@ -8,8 +8,8 @@
         window changed:\n\nThis is required to turn GendRight on or off when you\'re typing in apps.
         \n\nEnabling the shortcut toggle on this screen is NOT required.</string>
     <string name="floating_widget_content_desc">Gendright floating widget</string>
-    <string name="accept_suggestion_positive_button_text">Accept</string>
-    <string name="accept_suggestion_negative_button_text">Deny</string>
+    <string name="suggestion_bottom_sheet_positive_button">Accept</string>
+    <string name="suggestion_bottom_sheet_negative_button">Deny</string>
     <string name="onboarding_title_1">Fair Language for a Fairer World</string>
     <string name="onboarding_description_1">Identify and avoid gender-biased language in your writing, promoting more equitable and respectful communication.</string>
     <string name="onboarding_title_2">Real-time Gender Bias Detection</string>
@@ -24,4 +24,10 @@
     <string name="settings_accessibility_feature_title">Allow us to check text as you type</string>
     <string name="settings_accessibility_feature_desc">Gendright needs access to your Android accessibility features to check the text you type for biases</string>
     <string name="settings_auto_select_most_relevant_title">Auto-select most relevant suggestion</string>
+    <string name="navigate_back_icon_desc">Go back</string>
+    <string name="quick_test_title">Gendright Quick Test</string>
+    <string name="quick_test_footer">We will provide suggestions once you start typing...</string>
+    <string name="quick_test_input_field_hint">I do not like women</string>
+    <string name="suggestions_bottomsheet_title">Suggestions</string>
+    <string name="suggestions_bottomsheet_close_icon_desc">Close</string>
 </resources>

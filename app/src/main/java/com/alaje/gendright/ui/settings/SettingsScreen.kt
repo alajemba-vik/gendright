@@ -83,7 +83,7 @@ fun SettingsScreen(
         ) {
             Text(
                 text = stringResource(id = R.string.settings),
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.padding(vertical = 32.dp)
             )
 
