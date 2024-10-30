@@ -14,9 +14,12 @@ import androidx.compose.ui.unit.dp
 fun ActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    text: String
+    text: String,
+    enabled: Boolean = true
 ) {
     TextButton(
+        modifier = modifier.fillMaxWidth(),
+        enabled = enabled,
         onClick = onClick,
         colors = ButtonDefaults.textButtonColors(
             containerColor = MaterialTheme.colorScheme.primary,
@@ -25,7 +28,6 @@ fun ActionButton(
         contentPadding = PaddingValues(
             vertical = 16.dp,
         ),
-        modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.small,
     ) {
         Text(

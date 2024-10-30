@@ -8,10 +8,16 @@ class LocalDataSource(context: Context) {
     fun checkhasOnboardedUser(): Boolean {
         return sharedPreferences.getBoolean("isFirstTimeUser", true)
     }
-
     fun setUserHasOnboarded() {
         sharedPreferences.edit().putBoolean("isFirstTimeUser", false).apply()
     }
 
+    fun checkHasAutoSelectMostRelevant(): Boolean {
+        return sharedPreferences.getBoolean("autoSelectMostRelevant", false)
+    }
+
+    fun setAutoSelectMostRelevant(shouldEnable: Boolean) {
+        sharedPreferences.edit().putBoolean("autoSelectMostRelevant", shouldEnable).apply()
+    }
 
 }

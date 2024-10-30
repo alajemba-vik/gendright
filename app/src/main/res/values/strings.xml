@@ -17,4 +17,11 @@
     <string name="onboarding_title_3">You’re in control right from the start</string>
     <string name="onboarding_description_3">Accept or refuse suggestions.\nYour text is processed locally on your own device and no information about you is shared or stored.</string>
     <string name="get_started">Get started</string>
+    <string name="quick_test">Quick Test</string>
+    <string name="settings">Settings</string>
+    <string name="settings_allow_to_display_over_apps_title">Allow us to display over other apps</string>
+    <string name="settings_allow_to_display_over_apps_desc">Gendright needs this permission to show you suggestions as you type in other apps</string>
+    <string name="settings_accessibility_feature_title">Allow us to check text as you type</string>
+    <string name="settings_accessibility_feature_desc">Gendright needs access to your Android accessibility features to check the text you type for biases</string>
+    <string name="settings_auto_select_most_relevant_title">Auto-select most relevant suggestion</string>
 </resources>

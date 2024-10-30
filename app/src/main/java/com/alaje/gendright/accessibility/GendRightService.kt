@@ -4,7 +4,6 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -277,25 +276,6 @@ class GendRightService: AccessibilityService() {
             }
         }
 
-    }
-
-    companion object{
-        fun isAccessibilityServiceEnabled(context: Context): Boolean {
-            return try {
-                val enabledServices = Settings.Secure.getString(
-                    context.contentResolver,
-                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-                )
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    enabledServices.contains(GendRightService::class.java.`package`?.name ?: "")
-                } else {
-                    false
-                }
-            } catch (e: Exception){
-                return false
-            }
-        }
     }
 }
 

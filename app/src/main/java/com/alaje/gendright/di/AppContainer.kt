@@ -13,8 +13,10 @@ class AppContainer(
     companion object {
         var instance: AppContainer? = null
 
-        fun initAppContainer(context: Context) {
-            instance = AppContainer(context)
+        fun initAppContainer(context: Context): AppContainer {
+            return AppContainer(context).also {
+                instance = it
+            }
         }
     }
 }
