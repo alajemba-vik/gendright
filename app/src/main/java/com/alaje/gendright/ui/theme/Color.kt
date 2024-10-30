@@ -19,6 +19,6 @@ val Grey50 = Color(0xFFE9E9E9)
 
 val Pink300 = Color(0xFFEE00FF)
 
-val Yellow700 = Color(0xFF9B5151)
+val Yellow700 = Color(0xFFFFC039)
 
 val primaryColor = Green200

@@ -74,32 +74,35 @@ val Typography = Typography(
 
     // Titles
     titleSmall = TextStyle(
-        fontFamily = piazzollaFamily,
+        fontFamily = redHatTextFamily,
         fontSize = 16.sp,
+        fontWeight = FontWeight.Bold
     ),
     titleMedium = TextStyle(
-        fontFamily = piazzollaFamily,
+        fontFamily = redHatTextFamily,
         fontSize = 18.sp,
+        fontWeight = FontWeight.Bold
     ),
     titleLarge = TextStyle(
-        fontFamily = piazzollaFamily,
+        fontFamily = redHatTextFamily,
         fontSize = 24.sp,
+        fontWeight = FontWeight.Bold
     ),
 
     // Displays
     displayLarge = TextStyle(
-        fontFamily = piazzollaFamily,
-        fontSize = 96.sp,
+        fontFamily = redHatTextFamily,
+        fontSize = 48.sp,
         fontWeight = FontWeight.Bold,
     ),
     displayMedium = TextStyle(
-        fontFamily = piazzollaFamily,
-        fontSize = 60.sp,
+        fontFamily = redHatTextFamily,
+        fontSize = 32.sp,
         fontWeight = FontWeight.Bold,
     ),
     displaySmall = TextStyle(
-        fontFamily = piazzollaFamily,
-        fontSize = 48.sp,
+        fontFamily = redHatTextFamily,
+        fontSize = 24.sp,
         fontWeight = FontWeight.Bold,
     )
 )
