@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.alaje.gendright.ui.navigation.NavigationActions.navigateToQuickTest
+import com.alaje.gendright.ui.navigation.NavigationActions.navigateToSettings
 import com.alaje.gendright.ui.onboarding.OnboardingScreen
 import com.alaje.gendright.ui.quicktest.QuickTestScreen
 import com.alaje.gendright.ui.settings.SettingsScreen
@@ -17,16 +19,23 @@ fun GendrightNavHost() {
         startDestination = NavigationActions.onboarding
     ) {
         composable(NavigationActions.onboarding) {
-            OnboardingScreen()
+            OnboardingScreen(
+                onGetStarted = {
+                    navController.navigateToSettings()
+                }
+            )
         }
 
         composable(NavigationActions.settings) {
-            SettingsScreen()
+            SettingsScreen(
+                onQuickTest = {
+                    navController.navigateToQuickTest()
+                }
+            )
         }
 
         composable(NavigationActions.quickTest) {
             QuickTestScreen()
         }
-
     }
 }

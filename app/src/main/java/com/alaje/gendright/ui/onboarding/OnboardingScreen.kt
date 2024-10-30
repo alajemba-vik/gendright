@@ -15,18 +15,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.alaje.gendright.R
+import com.alaje.gendright.di.AppContainer
 import com.alaje.gendright.ui.components.ActionButton
 import com.alaje.gendright.ui.components.GendrightLogo
 import com.alaje.gendright.ui.theme.Grey50
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
-fun OnboardingScreen() {
+fun OnboardingScreen(onGetStarted: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { pageSize })
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -37,6 +43,18 @@ fun OnboardingScreen() {
                 GendrightLogo()
             }
         },
+        bottomBar = {
+            ActionButton(
+                onClick = {
+                    AppContainer.instance?.localDataSource?.setUserHasOnboarded()
+                    onGetStarted()
+                },
+                text = stringResource(id = R.string.get_started),
+                modifier = Modifier
+                    .padding(dimensionResource(id = R.dimen.padding_default))
+                    .padding(bottom = dimensionResource(id = R.dimen.padding_default))
+            )
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -76,16 +94,15 @@ fun OnboardingScreen() {
 
                 }
             }
-
-            ActionButton(
-                onClick = {
-
-                },
-                text = stringResource(id = R.string.get_started)
-            )
         }
     }
 
+    LaunchedEffect(pagerState.currentPage) {
+        coroutineScope.launch {
+            delay(5000)
+            pagerState.animateScrollToPage((pagerState.currentPage + 1) % pageSize)
+        }
+    }
 }
 
 @Composable
