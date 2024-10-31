@@ -30,4 +30,5 @@
     <string name="quick_test_input_field_hint">I do not like women</string>
     <string name="suggestions_bottomsheet_title">Suggestions</string>
     <string name="suggestions_bottomsheet_close_icon_desc">Close</string>
+    <string name="bias_text_example">I do not like women</string>
 </resources>
