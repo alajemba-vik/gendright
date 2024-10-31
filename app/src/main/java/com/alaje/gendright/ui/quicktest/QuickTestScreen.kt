@@ -229,16 +229,18 @@ fun QuickTestScreen(
                 )
             }
 
-            GendRightFAB(
-                onClick = {
-                    hasUnseenSuggestions = false
+            //TODO (Display in-app FAB)
+            if (false)
+                GendRightFAB(
+                    onClick = {
+                        hasUnseenSuggestions = false
 
-                    openBottomSheet()
-                },
-                hasUnseenSuggestion = hasUnseenSuggestions,
-                isLoading = isLoading,
-                enabled = biasReader.response.collectAsState().value.data != null
-            )
+                        openBottomSheet()
+                    },
+                    hasUnseenSuggestion = hasUnseenSuggestions,
+                    isLoading = isLoading,
+                    enabled = biasReader.response.collectAsState().value.data != null
+                )
         }
     }
 
