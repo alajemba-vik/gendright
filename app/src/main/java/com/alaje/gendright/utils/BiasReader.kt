@@ -4,32 +4,34 @@ import android.util.Log
 import com.alaje.gendright.data.googleAIClient.models.AIClientAPIResponse
 import com.alaje.gendright.data.models.DataResponse
 import com.alaje.gendright.di.AppContainer
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 class BiasReader {
-    private val _isProcessing = MutableStateFlow(false)
-    val isProcessing = _isProcessing
-
     var textFieldsCache: MutableMap<String, AIClientAPIResponse> = mutableMapOf()
 
-    var lastResponse: DataResponse<AIClientAPIResponse> = DataResponse.Success(null)
+    private val _response: MutableStateFlow<DataResponse<AIClientAPIResponse>> =
+        MutableStateFlow(DataResponse.Idle())
+    val response: StateFlow<DataResponse<AIClientAPIResponse>> = _response
 
     suspend fun readText(text: String) {
+        delay(1000)
+
         Log.d("GendRightService", "Processing text: $text")
 
         val cachedData = textFieldsCache[text]
 
         if (cachedData != null) {
             // Set the cached data
-            lastResponse = DataResponse.Success(cachedData)
+            _response.value = DataResponse.Success(cachedData)
         } else {
-
-            _isProcessing.value = true
+            _response.value = DataResponse.Loading()
 
             val response = AppContainer.instance?.aiClientAPIService?.processText(text)
 
             if (response != null) {
-                lastResponse = response
+                _response.value = response
 
                 when (response) {
                     is DataResponse.Success -> {
@@ -47,12 +49,14 @@ class BiasReader {
                     }
                 }
             } else {
+                _response.value = DataResponse.APIError("No response")
+
                 Log.d("BiasReader", "No response")
             }
 
-            _isProcessing.value = false
+
 
         }
     }
-
 }
+

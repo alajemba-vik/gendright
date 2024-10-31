@@ -19,13 +19,13 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.core.view.isVisible
 import com.alaje.gendright.R
+import com.alaje.gendright.data.models.DataResponse
 import com.alaje.gendright.utils.BiasReader
 import com.alaje.gendright.utils.ScreenUtils
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -70,9 +70,9 @@ class GendRightService: AccessibilityService() {
         }
 
         coroutineScope.launch {
-            biasReader.isProcessing.collect {
+            biasReader.response.collect {
                 withContext(Dispatchers.Main) {
-                    if (it) {
+                    if (it is DataResponse.Loading) {
                         floatingWidgetAnimator?.start()
                     } else {
                         floatingWidgetAnimator?.end()
@@ -101,8 +101,6 @@ class GendRightService: AccessibilityService() {
                         job.cancel()
 
                         job = coroutineScope.launch {
-                            delay(1000)
-
                             biasReader.readText(text)
 
                             lastEventAccessibilityNodeInfo = this@apply
