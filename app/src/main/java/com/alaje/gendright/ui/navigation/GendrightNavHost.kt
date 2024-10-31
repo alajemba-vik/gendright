@@ -1,5 +1,8 @@
 package com.alaje.gendright.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,7 +19,24 @@ fun GendrightNavHost() {
 
     NavHost(
         navController = navController,
-        startDestination = NavigationActions.onboarding
+        startDestination = NavigationActions.onboarding,
+        enterTransition = {
+            // slide in
+            slideInHorizontally(
+                animationSpec = tween(500),
+                initialOffsetX = { it }
+            )
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { it }
+            )
+        },
+        popEnterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { -it }
+            )
+        }
     ) {
         composable(NavigationActions.onboarding) {
             OnboardingScreen(
