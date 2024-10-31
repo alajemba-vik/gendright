@@ -1,6 +1,7 @@
 package com.alaje.gendright.ui.onboarding
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -27,15 +29,19 @@ import com.alaje.gendright.ui.components.ActionButton
 import com.alaje.gendright.ui.components.GendrightLogo
 import com.alaje.gendright.ui.theme.Grey50
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @Composable
 fun OnboardingScreen(onGetStarted: () -> Unit) {
-    val pagerState = rememberPagerState(pageCount = { pageSize })
-    val coroutineScope = rememberCoroutineScope()
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { pageSize }
+    )
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize(),
         topBar = {
             Row(
                 modifier = Modifier.padding(dimensionResource(id = R.dimen.padding_default)),
@@ -70,7 +76,8 @@ fun OnboardingScreen(onGetStarted: () -> Unit) {
 
             Column(
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
             ) {
                 HorizontalPager(
                     state = pagerState
@@ -93,14 +100,27 @@ fun OnboardingScreen(onGetStarted: () -> Unit) {
                     }
 
                 }
-            }
-        }
-    }
 
-    LaunchedEffect(pagerState.currentPage) {
-        coroutineScope.launch {
-            delay(5000)
-            pagerState.animateScrollToPage((pagerState.currentPage + 1) % pageSize)
+                val isPressedState = pagerState.interactionSource.collectIsPressedAsState()
+                val coroutineScope = rememberCoroutineScope()
+
+                LaunchedEffect(isPressedState) {
+                    snapshotFlow { isPressedState.value }
+                        .collectLatest { isPressed ->
+                            if (!isPressed) {
+                                while (true) {
+                                    delay(5_000)
+                                    coroutineScope.launch {
+                                        pagerState.animateScrollToPage(
+                                            pagerState.currentPage.inc() % pagerState.pageCount
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                }
+            }
+
         }
     }
 }

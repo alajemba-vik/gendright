@@ -278,6 +278,7 @@ private fun GendRightFAB(
         }
     }
 
+
     val availableWidthInPx = with(density) { configuration.screenWidthDp.dp.roundToPx() }
 
     val scale by infiniteTransition.animateFloat(
@@ -289,6 +290,7 @@ private fun GendRightFAB(
         ),
         label = "gendrightFABAnimation"
     )
+
 
     val isKeyboardOpen = WindowInsets.isImeVisible
     val keyboardHeight = WindowInsets.ime.getBottom(density = density)
