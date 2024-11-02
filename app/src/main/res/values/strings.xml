@@ -25,9 +25,9 @@
     <string name="settings_auto_select_most_relevant_title">Auto-select most relevant suggestion</string>
     <string name="navigate_back_icon_desc">Go back</string>
     <string name="quick_test_title">Gendright Quick Test</string>
-    <string name="quick_test_footer">We will provide suggestions once you start typing...</string>
+    <string name="quick_test_footer">We will provide suggestions once you start typing…</string>
     <string name="quick_test_input_field_hint">Women belong in the kitchen</string>
     <string name="suggestions_bottomsheet_title">Suggestions</string>
     <string name="suggestions_bottomsheet_close_icon_desc">Close</string>
-    <string name="bias_text_example">I do not like women</string>
+    <string name="bias_text_example">Women belong in the kitchen</string>
 </resources>

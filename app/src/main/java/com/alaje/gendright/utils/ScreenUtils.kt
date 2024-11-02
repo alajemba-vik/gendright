@@ -25,9 +25,3 @@ object ScreenUtils {
     }
 
 }
-
-fun convertPixelsToDp(px: Float, context: Context): Float {
-    val screenPixelDensity = context.resources.displayMetrics.density
-    val dpValue = px / screenPixelDensity
-    return dpValue
-}
