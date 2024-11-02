@@ -33,13 +33,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -127,7 +127,7 @@ fun QuickTestScreen(
         }
     }
 
-    BottomSheetScaffold(
+    Scaffold(
         topBar = {
             TopAppBar(
                 title = {},
@@ -141,7 +141,7 @@ fun QuickTestScreen(
                 },
             )
         },
-        sheetContent = {
+        /*sheetContent = {
             SuggestionsBottomSheet(
                 onAccept = {
                     textFieldValueState = TextFieldValue(
@@ -159,7 +159,7 @@ fun QuickTestScreen(
             )
         },
         scaffoldState = scaffoldState,
-        sheetDragHandle = null
+        sheetDragHandle = null*/
     ) { paddingValues ->
 
         Box(
@@ -192,10 +192,10 @@ fun QuickTestScreen(
                     onValueChange = { textFieldValue ->
                         textFieldValueState = textFieldValue
 
-                        job.cancel()
+                        /*job.cancel()
                         job = coroutineScope.launch {
                             biasReader.readText(textFieldValue.text)
-                        }
+                        }*/
                     },
                     modifier = Modifier
                         .focusRequester(inputFieldFocusRequester)
@@ -206,13 +206,7 @@ fun QuickTestScreen(
                             brush = quickTestContentGradient(),
                             shape = OutlinedTextFieldDefaults.shape
                         ),
-                    minLines = 10,
-                    placeholder = {
-                        Text(
-                            text = stringResource(R.string.quick_test_input_field_hint),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
+                    minLines = 10
                 )
 
                 LaunchedEffect(Unit) {
@@ -488,7 +482,7 @@ private fun SuggestionsBottomSheet(
                             )
                         } else {
                             border(
-                                color = MaterialTheme.colorScheme.outline,
+                                color = MaterialTheme.colorScheme.surfaceDim,
                                 width = 1.dp,
                                 shape = MaterialTheme.shapes.small
                             )

@@ -7,21 +7,21 @@
             <corners android:radius="8dp" />
             <gradient
                 android:angle="270"
-                android:centerColor="#ff00EAFF"
-                android:endColor="#ff00EAFF"
-                android:startColor="#FF8BB19B"
+                android:centerColor="?attr/colorTertiary"
+                android:endColor="?attr/colorTertiary"
+                android:startColor="?attr/colorPrimary"
                 android:type="linear" />
         </shape>
     </item>
 
     <item
-        android:bottom="1dp"
-        android:left="1dp"
-        android:right="1dp"
-        android:top="1dp">
+        android:bottom="2dp"
+        android:left="2dp"
+        android:right="2dp"
+        android:top="2dp">
         <shape android:shape="rectangle">
             <corners android:radius="8dp" />
-            <solid android:color="#fff" />
+            <solid android:color="?android:attr/colorBackground" />
         </shape>
     </item>
 
