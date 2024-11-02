@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.GendRight" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.GendRight" parent="Theme.Material3.DynamicColors.DayNight">
+        <!--<item name="colorPrimary">@color/green_200</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSurface">@android:color/white</item>
+        <item name="colorOnSurface">@color/grey_900</item>
+        <item name="android:colorBackground">@android:color/white</item>
+        <item name="colorOnContainer">@color/grey_900</item>
+        <item name="colorSecondary">@color/grey_600</item>
+        <item name="colorTertiary">@color/blue_300</item>
+        <item name="colorTertiaryContainer">@color/blue_50</item>
+        <item name="colorOnTertiaryContainer">@color/grey_900</item>
+        <item name="colorPrimaryContainer">@color/green_200</item>
+        <item name="colorOnPrimaryContainer">@android:color/white</item>
+        <item name="colorSecondaryContainer">@color/green_50</item>
+        <item name="colorOnSecondaryContainer">@color/grey_900</item>
+        <item name="colorOutline">@color/grey_100</item>
+        <item name="colorSurfaceDim">@color/green_50</item>
+        <item name="colorOutlineVariant">@color/grey_100</item>
+    --></style>
 </resources>

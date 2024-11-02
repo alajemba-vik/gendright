@@ -2,6 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
+    android:background="#00FFFFFF"
+    android:elevation="3dp"
     android:layout_height="match_parent">
 
 
@@ -10,6 +12,7 @@
         android:src="@mipmap/ic_launcher_round"
         android:contentDescription="@string/floating_widget_content_desc"
         android:layout_height="50dp"
+        android:background="#00FFFFFF"
         />
 
 </LinearLayout>
