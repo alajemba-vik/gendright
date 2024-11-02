@@ -4,10 +4,12 @@
     android:layout_width="match_parent"
     android:background="#00FFFFFF"
     android:elevation="3dp"
+    android:focusable="false"
     android:layout_height="match_parent">
 
 
     <ImageView
+        android:focusable="false"
         android:layout_width="50dp"
         android:src="@mipmap/ic_launcher_round"
         android:contentDescription="@string/floating_widget_content_desc"

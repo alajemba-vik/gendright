@@ -16,6 +16,8 @@ class BiasReader {
     val response: StateFlow<DataResponse<AIClientAPIResponse>> = _response
 
     suspend fun readText(text: String) {
+        _response.value = DataResponse.Loading()
+
         delay(1000)
 
         Log.d("GendRightService", "Processing text: $text")
@@ -26,8 +28,6 @@ class BiasReader {
             // Set the cached data
             _response.value = DataResponse.Success(cachedData)
         } else {
-            _response.value = DataResponse.Loading()
-
             val response = AppContainer.instance?.aiClientAPIService?.processText(text)
 
             if (response != null) {
@@ -53,9 +53,6 @@ class BiasReader {
 
                 Log.d("BiasReader", "No response")
             }
-
-
-
         }
     }
 }

@@ -43,6 +43,7 @@ class AIClientAPIService {
                         should aim for similar brevity and directness as the original sentence, 
                         where possible, while still effectively addressing the bias. Assign these 
                         suggestions to the output JSON’s suggestions field as a list of strings.
+                        Do not add a full stop at the end of a suggestion.
                         If the sentence is rated below 70 on the bias scale, the suggestions must be
                          an empty list. The reasoning should be brief and direct, clearly explaining
                           the potential for bias (or lack thereof).
