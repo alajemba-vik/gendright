@@ -1,20 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:background="#00FFFFFF"
-    android:elevation="3dp"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/floating_widget_parent_size"
     android:focusable="false"
-    android:layout_height="match_parent">
-
+    android:layout_height="@dimen/floating_widget_parent_size">
 
     <ImageView
-        android:focusable="false"
+        android:layout_gravity="center"
+        android:layout_margin="2dp"
+        android:background="@drawable/floating_widget_bg"
         android:layout_width="50dp"
-        android:src="@mipmap/ic_launcher_round"
+        android:elevation="2dp"
+        android:padding="10dp"
+        android:src="@drawable/gendright_logo"
         android:contentDescription="@string/floating_widget_content_desc"
         android:layout_height="50dp"
-        android:background="#00FFFFFF"
         />
 
-</LinearLayout>
+    <View
+        android:id="@+id/unread_suggestion_indicator"
+        android:layout_width="8dp"
+        android:layout_height="@dimen/padding_min"
+        android:layout_gravity="end"
+        android:layout_margin="16dp"
+        android:background="@drawable/unread_suggestion_indicator_bg"
+        android:translationZ="5dp"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/no_internet_connection_indicator"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_gravity="end"
+        android:layout_margin="7dp"
+        android:background="@drawable/offline_icon"
+        android:translationZ="5dp"
+        android:visibility="gone" />
+
+</FrameLayout>

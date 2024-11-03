@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.alaje.gendright.di.AppContainer
 import com.alaje.gendright.ui.navigation.NavigationActions.navigateToQuickTest
 import com.alaje.gendright.ui.navigation.NavigationActions.navigateToSettings
 import com.alaje.gendright.ui.onboarding.OnboardingScreen
@@ -20,10 +21,16 @@ import com.alaje.gendright.ui.settings.SettingsScreen
 @Composable
 fun GendrightNavHost() {
     val navController = rememberNavController()
+    val startDestination =
+        if (AppContainer.instance?.localDataSource?.checkHasOnboardedUser() == true) {
+            NavigationActions.settings
+        } else {
+            NavigationActions.onboarding
+        }
 
     NavHost(
         navController = navController,
-        startDestination = NavigationActions.onboarding,
+        startDestination = startDestination,
         enterTransition = {
             fadeIn(
                 animationSpec = tween(
@@ -69,6 +76,7 @@ fun GendrightNavHost() {
             OnboardingScreen(
                 onGetStarted = {
                     navController.navigateToSettings()
+                    AppContainer.instance?.localDataSource?.setUserHasOnboarded()
                 }
             )
         }

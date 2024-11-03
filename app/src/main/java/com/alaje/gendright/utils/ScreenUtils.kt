@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.DisplayMetrics
 import android.util.Size
 import android.view.WindowManager
+import kotlin.math.roundToInt
 
 object ScreenUtils {
     private val getWindowManager = { context: Context ->
@@ -24,4 +25,7 @@ object ScreenUtils {
         return Size(width, height)
     }
 
+    fun pxToDp(context: Context, px: Float): Int {
+        return (px * context.resources.displayMetrics.density).roundToInt()
+    }
 }

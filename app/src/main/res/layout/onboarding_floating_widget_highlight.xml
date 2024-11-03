@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:focusable="false">
+
+    <View
+        android:layout_width="@dimen/floating_widget_highlight_indicator_size"
+        android:layout_height="@dimen/floating_widget_highlight_indicator_size"
+        android:alpha="0.3"
+        android:background="@drawable/highlight_gendright_fab_bg"
+        android:elevation="2dp" />
+
+</FrameLayout>
