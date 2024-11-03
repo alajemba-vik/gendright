@@ -5,14 +5,14 @@ import androidx.navigation.NavController
 object NavigationActions {
 
     fun NavController.navigateToSettings() {
-        navigate(settings)
+        navigate(SETTINGS)
     }
 
     fun NavController.navigateToQuickTest() {
-        navigate(quickTest)
+        navigate(QUICKTEST)
     }
 
-    const val onboarding = "onboarding"
-    const val settings = "settings"
-    const val quickTest = "quickText"
+    const val ONBOARDING = "onboarding"
+    const val SETTINGS = "settings"
+    const val QUICKTEST = "quickText"
 }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/gendright_accessibility_service_description"
-    android:accessibilityEventTypes="typeViewFocused|typeViewTextChanged|typeWindowContentChanged|typeViewClicked"
-    android:accessibilityFlags="flagInputMethodEditor|flagRetrieveInteractiveWindows|flagRequestAccessibilityButton"
+    android:accessibilityEventTypes="typeViewFocused|typeViewTextChanged|typeWindowContentChanged|typeViewClicked|typeWindowsChanged|typeWindowStateChanged"
+    android:accessibilityFlags="flagInputMethodEditor|flagRetrieveInteractiveWindows|flagRequestAccessibilityButton|flagIncludeNotImportantViews|flagRequestTouchExplorationMode|flagReportViewIds"
     android:accessibilityFeedbackType="feedbackVisual"
     android:notificationTimeout="300"
     android:settingsActivity="com.alaje.gendright.MainActivity"
