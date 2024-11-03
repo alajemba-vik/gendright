@@ -23,9 +23,9 @@ fun GendrightNavHost() {
     val navController = rememberNavController()
     val startDestination =
         if (AppContainer.instance?.localDataSource?.checkHasOnboardedUser() == true) {
-            NavigationActions.settings
+            NavigationActions.SETTINGS
         } else {
-            NavigationActions.onboarding
+            NavigationActions.ONBOARDING
         }
 
     NavHost(
@@ -72,7 +72,7 @@ fun GendrightNavHost() {
             )
         }
     ) {
-        composable(NavigationActions.onboarding) {
+        composable(NavigationActions.ONBOARDING) {
             OnboardingScreen(
                 onGetStarted = {
                     navController.navigateToSettings()
@@ -81,7 +81,7 @@ fun GendrightNavHost() {
             )
         }
 
-        composable(NavigationActions.settings) {
+        composable(NavigationActions.SETTINGS) {
             SettingsScreen(
                 onQuickTest = {
                     navController.navigateToQuickTest()
@@ -89,7 +89,7 @@ fun GendrightNavHost() {
             )
         }
 
-        composable(NavigationActions.quickTest) {
+        composable(NavigationActions.QUICKTEST) {
             QuickTestScreen(
                 onBack = {
                     navController.popBackStack()
