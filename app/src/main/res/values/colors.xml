@@ -14,5 +14,6 @@
     <color name="pink_300">#FFEE00FF</color>
 
     <color name="yellow_700">#FFFFC039</color>
+    <color name="overlay_color">#52000000</color>
 
 </resources>

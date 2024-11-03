@@ -4,7 +4,9 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
+import android.content.Context
 import android.content.Intent
+import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
@@ -24,12 +26,14 @@ import androidx.core.view.accessibility.AccessibilityNodeInfoCompat.FOCUS_INPUT
 import androidx.core.view.isVisible
 import com.alaje.gendright.R
 import com.alaje.gendright.data.models.DataResponse
+import com.alaje.gendright.di.AppContainer
 import com.alaje.gendright.utils.BiasReader
 import com.alaje.gendright.utils.ScreenUtils
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,7 +48,9 @@ class GendRightService : AccessibilityService() {
     }
     private var coroutineScope = CoroutineScope(Dispatchers.IO + coroutineExceptionHandler)
 
-    private var floatingWidget: View? = null
+    private var onboardingOverlay: View? = null
+    private var onboardingHighlightLayout: View? = null
+    private var floatingWidgetLayout: View? = null
     private var floatingWidgetAnimator: ObjectAnimator? = null
     private var suggestionsLayout: View? = null
     private var suggestionTextView1: TextView? = null
@@ -88,6 +94,15 @@ class GendRightService : AccessibilityService() {
                     if (it is DataResponse.Loading) {
                         floatingWidgetAnimator?.start()
                     } else {
+                        if (it is DataResponse.Success && !it.data?.suggestions.isNullOrEmpty()) {
+                            toggleUnreadIndicator(true)
+                        } else {
+                            if (it is DataResponse.NetworkError) {
+                                toggleNoInternetIndicator(true)
+                                delay(5000L)
+                                toggleNoInternetIndicator(false)
+                            }
+                        }
                         floatingWidgetAnimator?.end()
                     }
                 }
@@ -98,9 +113,27 @@ class GendRightService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         event?.source?.apply {
+
             if (event.eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED || event.eventType == AccessibilityEvent.TYPE_VIEW_FOCUSED) {
                 if (isEditable && isVisibleToUser && isFocused && !text.isNullOrBlank()) {
-                    if (floatingWidget?.isVisible != true && Settings.canDrawOverlays(this@GendRightService)) {
+
+                    if (packageName == event.packageName) {
+                        // Only display walkthrough on GendRight app
+                        val hasSeenWalkthrough =
+                            AppContainer.instance?.localDataSource?.checkUserHasSeenWalkthroughUIOnQuickTest() == true
+
+                        if (!hasSeenWalkthrough) {
+                            AppContainer.instance?.localDataSource?.setUserHasSeenWalkthroughUIOnQuickTest()
+                            displayOnboardingHighlightUI(
+                                fabInitialX,
+                                fabInitialY(this@GendRightService),
+                                resources.getDimensionPixelSize(R.dimen.floating_widget_parent_size),
+                                Gravity.TOP or Gravity.START
+                            )
+                        }
+                    }
+
+                    if (floatingWidgetLayout?.isVisible != true && Settings.canDrawOverlays(this@GendRightService)) {
                         displayFloatingWidget()
                     }
 
@@ -137,7 +170,7 @@ class GendRightService : AccessibilityService() {
 
     override fun onDestroy() {
 
-        floatingWidget?.let {
+        floatingWidgetLayout?.let {
             windowManager.removeView(it)
         }
         suggestionsLayout?.let {
@@ -163,26 +196,27 @@ class GendRightService : AccessibilityService() {
         )
     }
 
+
     private fun displayFloatingWidget() {
-        if (floatingWidget == null) {
-            floatingWidget = LayoutInflater.from(this).inflate(R.layout.floating_widget, null)
-            floatingWidgetAnimator = floatingWidget?.prepareFloatingWidgetAnimator()
+        if (floatingWidgetLayout == null) {
+            floatingWidgetLayout = LayoutInflater.from(this).inflate(R.layout.floating_widget, null)
+            floatingWidgetAnimator = floatingWidgetLayout?.prepareFloatingWidgetAnimator()
 
             val params = WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
+                resources.getDimensionPixelSize(R.dimen.floating_widget_parent_size),
+                resources.getDimensionPixelSize(R.dimen.floating_widget_parent_size),
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                android.graphics.PixelFormat.TRANSLUCENT
+                PixelFormat.TRANSLUCENT
             )
 
             params.gravity = Gravity.TOP or Gravity.START
-            params.x = 0
-            params.y = ScreenUtils.screenSize(this).height / 2
+            params.x = fabInitialX
+            params.y = fabInitialY(this)
 
-            windowManager.addView(floatingWidget, params)
+            windowManager.addView(floatingWidgetLayout, params)
 
-            floatingWidget?.rootView?.setOnClickListener {
+            floatingWidgetLayout?.rootView?.setOnClickListener {
                 if (userIsMovingFAB) {
                     userIsMovingFAB = false
                     return@setOnClickListener
@@ -194,12 +228,13 @@ class GendRightService : AccessibilityService() {
 
                 if (suggestionsLayout?.isVisible != true && hasSuggestions && lastEventAccessibilityNodeInfo?.isFocused == true) {
                     displaySuggestionsWidget()
+                    toggleUnreadIndicator(false)
                 } else {
                     suggestionsLayout?.visibility = View.GONE
                 }
             }
 
-            floatingWidget?.rootView?.setOnTouchListener(
+            floatingWidgetLayout?.rootView?.setOnTouchListener(
                 object : View.OnTouchListener {
                     var initialX = 0
                     var initialY = 0
@@ -219,14 +254,14 @@ class GendRightService : AccessibilityService() {
                             MotionEvent.ACTION_MOVE -> {
                                 params.x = initialX + (event.rawX - initialTouchX).toInt()
                                 params.y = initialY + (event.rawY - initialTouchY).toInt()
-                                windowManager.updateViewLayout(floatingWidget, params)
+                                windowManager.updateViewLayout(floatingWidgetLayout, params)
                                 userIsMovingFAB = true
                                 return true
                             }
 
                             MotionEvent.ACTION_UP -> {
                                 val screenSize = ScreenUtils.screenSize(this@GendRightService)
-                                val widthOfFAB = floatingWidget?.width ?: 0
+                                val widthOfFAB = floatingWidgetLayout?.width ?: 0
                                 val distanceToLeft = params.x
                                 val distanceToRight = screenSize.width - widthOfFAB - params.x
                                 params.x = if (distanceToLeft < distanceToRight) {
@@ -234,7 +269,7 @@ class GendRightService : AccessibilityService() {
                                 } else {
                                     screenSize.width - widthOfFAB
                                 }
-                                windowManager.updateViewLayout(floatingWidget, params)
+                                windowManager.updateViewLayout(floatingWidgetLayout, params)
 
                                 v?.performClick()
                                 return true
@@ -245,10 +280,72 @@ class GendRightService : AccessibilityService() {
                     }
                 }
             )
+
         } else {
-            floatingWidget?.visibility = View.VISIBLE
+            floatingWidgetLayout?.visibility = View.VISIBLE
+        }
+    }
+
+    private fun displayOnboardingHighlightUI(
+        fabX: Int,
+        fabY: Int,
+        fabHeight: Int,
+        gravity: Int
+    ) {
+        displayOnboardingOverlay()
+
+        onboardingHighlightLayout = LayoutInflater.from(this@GendRightService)
+            .inflate(R.layout.onboarding_floating_widget_highlight, null)
+
+        val params = createParams()
+
+        params.x = fabX
+        val indicatorSize =
+            resources.getDimensionPixelSize(R.dimen.floating_widget_highlight_indicator_size)
+        params.y = fabY + (fabHeight / 2) - (indicatorSize / 2)
+        params.gravity = gravity
+
+        onboardingHighlightLayout?.translationX = -resources.getDimensionPixelSize(
+            R.dimen.floating_widget_highlight_indicator_translationX
+        ).toFloat()
+
+        windowManager.addView(onboardingHighlightLayout, params)
+
+        coroutineScope.launch {
+            delay(5000L)
+            removeWalkthroughUI()
+        }
+    }
+
+    private fun removeWalkthroughUI() {
+        windowManager.removeView(onboardingHighlightLayout)
+        windowManager.removeView(onboardingOverlay)
+    }
+
+    private fun displayOnboardingOverlay() {
+        onboardingOverlay = LayoutInflater.from(this@GendRightService)
+            .inflate(R.layout.onboarding_highlight_overlay, null)
+
+        val params = createParams().apply {
+            width = WindowManager.LayoutParams.MATCH_PARENT
+            height = WindowManager.LayoutParams.MATCH_PARENT
         }
 
+        onboardingOverlay?.setOnClickListener {
+            removeWalkthroughUI()
+        }
+
+        windowManager.addView(onboardingOverlay, params)
+    }
+
+    private fun toggleUnreadIndicator(show: Boolean) {
+        floatingWidgetLayout?.findViewById<View>(R.id.unread_suggestion_indicator)
+            ?.visibility = if (!show) View.GONE else View.VISIBLE
+    }
+
+    private fun toggleNoInternetIndicator(show: Boolean) {
+        floatingWidgetLayout?.findViewById<View>(R.id.no_internet_connection_indicator)
+            ?.visibility = if (!show) View.GONE else View.VISIBLE
     }
 
     private fun displaySuggestionsWidget() {
@@ -258,13 +355,9 @@ class GendRightService : AccessibilityService() {
         if (suggestionsLayout == null) {
             suggestionsLayout = LayoutInflater.from(this).inflate(R.layout.suggestions_layout, null)
 
-            val params = WindowManager.LayoutParams(
-                WindowManager.LayoutParams.MATCH_PARENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                android.graphics.PixelFormat.TRANSLUCENT
-            )
+            val params = createParams().apply {
+                width = WindowManager.LayoutParams.MATCH_PARENT
+            }
 
             params.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
             params.x = 0
@@ -351,6 +444,14 @@ class GendRightService : AccessibilityService() {
         }
 
     }
+
+    private fun createParams() = WindowManager.LayoutParams(
+        WindowManager.LayoutParams.WRAP_CONTENT,
+        WindowManager.LayoutParams.WRAP_CONTENT,
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE,
+        WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+        PixelFormat.TRANSLUCENT
+    )
 }
 
 private fun View.prepareFloatingWidgetAnimator(): ObjectAnimator {
@@ -361,3 +462,6 @@ private fun View.prepareFloatingWidgetAnimator(): ObjectAnimator {
     animator.repeatCount = ObjectAnimator.INFINITE
     return animator
 }
+
+private val fabInitialX = 0
+private val fabInitialY = { context: Context -> ScreenUtils.screenSize(context).height / 2 }
