@@ -5,8 +5,10 @@ import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityWindowInfo
 import androidx.core.view.isVisible
 import com.alaje.gendright.R
 import com.alaje.gendright.di.AppContainer
@@ -33,6 +35,8 @@ class GendRightService : AccessibilityService() {
         biasReader,
         coroutineScope
     )
+
+    private var isYetToSeeKeyboard = false
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -72,16 +76,22 @@ class GendRightService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        Log.d("GendRightService", "onAccessibilityEvent: $event")
+        Log.d("GendRightService", "nodeInfo: ${event?.source}")
         val eventAccessibilityNodeInfo = event?.source ?: return
         val eventType = event.eventType
 
-        if (eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED || eventType == AccessibilityEvent.TYPE_VIEW_FOCUSED) {
-            if (eventAccessibilityNodeInfo.isEditable &&
-                eventAccessibilityNodeInfo.isVisibleToUser &&
-                eventAccessibilityNodeInfo.isFocused &&
-                !eventAccessibilityNodeInfo.text.isNullOrBlank()
-            ) {
+        uiManager.apply {
+            if (suggestionsLayout?.isVisible == true && hasClickedOutside(event)) {
+                suggestionsLayout?.visibility = View.GONE
+            }
 
+            if (
+                (eventType == AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED ||
+                        eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) &&
+                eventAccessibilityNodeInfo.isInputField()
+            ) {
+                isYetToSeeKeyboard = true
                 if (packageName == event.packageName) {
                     // Only display walkthrough on Gendright app
                     val hasSeenWalkthrough =
@@ -100,11 +110,11 @@ class GendRightService : AccessibilityService() {
                     uiManager.displayFloatingWidget()
                 }
 
-                val inputText = eventAccessibilityNodeInfo.text.toString()
-                    .removeSuffix("Compose Message") // some texts have this suffix
+                val inputText = eventAccessibilityNodeInfo.nodeInfoText
 
                 if (inputText.trim().contains(" ") && !uiManager.didUserJustAcceptSuggestion) {
 
+                    Log.d("GendRightService", "Canceling job for new text: $inputText")
                     processTextJob.cancel()
 
                     uiManager.lastEventAccessibilityNodeInfo = eventAccessibilityNodeInfo
@@ -118,14 +128,24 @@ class GendRightService : AccessibilityService() {
                     uiManager.didUserJustAcceptSuggestion = false
                 }
             }
+
+            val hasInputMethod = windows.firstOrNull {
+                it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD
+            } != null
+
+            if (hasInputMethod) {
+                isYetToSeeKeyboard = false
+                if (uiManager.floatingWidgetLayout?.isVisible != true) {
+                    uiManager.displayFloatingWidget()
+                }
+            }
+
+            if (!isYetToSeeKeyboard && !hasInputMethod) {
+                uiManager.hideFloatingWidget()
+                Log.d("GendRightService", "No input method found")
+            }
         }
 
-        if (uiManager.suggestionsLayout?.isVisible == true && uiManager.shouldHideSuggestionsLayout(
-                event
-            )
-        ) {
-            uiManager.suggestionsLayout?.visibility = View.GONE
-        }
     }
 
     override fun onInterrupt() {
@@ -141,7 +161,6 @@ class GendRightService : AccessibilityService() {
         uiManager.onDestroy()
         super.onDestroy()
     }
-
 }
 
 private const val accessibilityEventsTimeout = 300L
