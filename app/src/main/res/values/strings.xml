@@ -31,4 +31,5 @@
     <string name="suggestions_bottomsheet_close_icon_desc">Close</string>
     <string name="bias_text_example">Women belong in the kitchen</string>
     <string name="gendright_onboarding_fab_tooltip">Click this to view suggestions once they are available.</string>
+    <string name="no_internet_connection_indicator_content_desc">No internet connection</string>
 </resources>

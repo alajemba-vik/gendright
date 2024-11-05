@@ -28,9 +28,7 @@ import com.alaje.gendright.utils.ScreenUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class GendRightServiceUIManager(
     private val gendRightService: GendRightService,
@@ -63,8 +61,9 @@ class GendRightServiceUIManager(
             floatingWidgetLayout = layoutInflater.inflate(R.layout.floating_widget, null)
             floatingWidgetAnimator = floatingWidgetLayout?.prepareFloatingWidgetAnimator()
 
-            val sizeInPx =
-                gendRightService.resources.getDimensionPixelSize(R.dimen.floating_widget_parent_size)
+            val sizeInPx = gendRightService.resources.getDimensionPixelSize(
+                R.dimen.floating_widget_parent_size
+            )
             val params = createParams(
                 width = sizeInPx,
                 height = sizeInPx
@@ -82,7 +81,7 @@ class GendRightServiceUIManager(
                     return@setOnClickListener
                 }
 
-                val inputText = lastEventAccessibilityNodeInfo?.text?.trim()?.toString() ?: ""
+                val inputText = lastEventAccessibilityNodeInfo?.nodeInfoText ?: ""
                 val hasSuggestions = biasReader.textFieldsCache[inputText]
                     ?.suggestions?.isNotEmpty() ?: false
 
@@ -205,11 +204,11 @@ class GendRightServiceUIManager(
             params.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
             params.x = 0
 
-            windowManager.addView(suggestionsLayout, params)
-
             suggestionsLayout?.apply {
                 setupSuggestionsView()
             }
+
+            windowManager.addView(suggestionsLayout, params)
 
         } else {
             suggestionsLayout?.apply {
@@ -235,34 +234,18 @@ class GendRightServiceUIManager(
             ?.visibility = if (!show) View.GONE else View.VISIBLE
     }
 
-    fun shouldHideSuggestionsLayout(event: AccessibilityEvent?): Boolean {
-        // has no accessibility node info
+    private fun toggleAPIErrorIndicator(show: Boolean) {
+        floatingWidgetLayout?.findViewById<View>(R.id.api_error_indicator)
+            ?.visibility = if (!show) View.GONE else View.VISIBLE
+    }
+
+    fun hasClickedOutside(event: AccessibilityEvent?): Boolean {
         if (lastEventAccessibilityNodeInfo == null) {
             return true
         }
 
-        // has clicked outside
         if (event?.eventType == AccessibilityEvent.TYPE_VIEW_CLICKED && event.source?.packageName != gendRightService.packageName) {
             return true
-        }
-
-        if (event?.eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
-
-            var inputFieldStillVisible = lastEventAccessibilityNodeInfo?.viewIdResourceName?.let {
-                event.source?.findAccessibilityNodeInfosByViewId(it)
-            }?.isNotEmpty() ?: false
-
-            if (!inputFieldStillVisible) {
-                inputFieldStillVisible = findChild(
-                    lastEventAccessibilityNodeInfo ?: return true,
-                    event.source
-                )
-            }
-
-            // has lost focus
-            if (lastEventAccessibilityNodeInfo?.findFocus(FOCUS_INPUT) == null && !inputFieldStillVisible) {
-                return true
-            }
         }
 
         return false
@@ -275,7 +258,7 @@ class GendRightServiceUIManager(
         suggestionTextView3 = findViewById(R.id.suggestion_3)
 
         val apiResponse =
-            biasReader.textFieldsCache[lastEventAccessibilityNodeInfo?.text.toString()]
+            biasReader.textFieldsCache[lastEventAccessibilityNodeInfo?.nodeInfoText.toString()]
         suggestionTextView1?.text = apiResponse?.suggestions?.firstOrNull() ?: ""
         suggestionTextView2?.text = apiResponse?.suggestions?.getOrNull(1) ?: ""
         suggestionTextView3?.text = apiResponse?.suggestions?.getOrNull(2) ?: ""
@@ -324,6 +307,11 @@ class GendRightServiceUIManager(
 
     }
 
+    fun hideFloatingWidget() {
+        floatingWidgetAnimator?.cancel()
+        floatingWidgetLayout?.visibility = View.GONE
+    }
+
     private fun createParams(
         width: Int = WindowManager.LayoutParams.WRAP_CONTENT,
         height: Int = WindowManager.LayoutParams.WRAP_CONTENT
@@ -336,23 +324,36 @@ class GendRightServiceUIManager(
     )
 
     fun listenForPerAPIResponse() {
-        coroutineScope.launch {
-            biasReader.response.collectLatest {
-                withContext(Dispatchers.Main) {
-                    if (it is DataResponse.Loading) {
-                        floatingWidgetAnimator?.start()
+        coroutineScope.launch(Dispatchers.Main) {
+            biasReader.response.collect {
+                if (it is DataResponse.Loading) {
+
+                    toggleUnreadIndicator(false)
+                    toggleAPIErrorIndicator(false)
+                    toggleNoInternetIndicator(false)
+
+                    floatingWidgetAnimator?.start()
+
+                } else {
+                    floatingWidgetAnimator?.end()
+
+                    if (it is DataResponse.Success && !it.data?.suggestions.isNullOrEmpty()) {
+                        toggleUnreadIndicator(true)
+                        toggleAPIErrorIndicator(false)
+                        toggleNoInternetIndicator(false)
                     } else {
-                        if (it is DataResponse.Success && !it.data?.suggestions.isNullOrEmpty()) {
-                            toggleUnreadIndicator(true)
-                        } else {
-                            if (it is DataResponse.NetworkError) {
-                                toggleNoInternetIndicator(true)
-                                delay(5000L)
-                                toggleNoInternetIndicator(false)
-                            }
+                        if (it is DataResponse.NetworkError) {
+                            toggleNoInternetIndicator(true)
+                            delay(5000L)
+                            toggleNoInternetIndicator(false)
+                        } else if (it is DataResponse.APIError) {
+                            toggleAPIErrorIndicator(true)
+                            delay(5000L)
+                            toggleAPIErrorIndicator(false)
                         }
-                        floatingWidgetAnimator?.end()
+
                     }
+
                 }
             }
         }
@@ -366,7 +367,6 @@ class GendRightServiceUIManager(
             windowManager.removeView(it)
         }
     }
-
 }
 
 private fun AccessibilityNodeInfo.updateInput(
@@ -385,6 +385,8 @@ private fun AccessibilityNodeInfo.updateInput(
     )
 }
 
+fun AccessibilityNodeInfo.isInputField() =
+    isEditable && isVisibleToUser && isFocused && nodeInfoText.isNotBlank()
 
 private fun View.prepareFloatingWidgetAnimator(): ObjectAnimator {
     val scaleX = PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.1f, 1f)
@@ -395,21 +397,11 @@ private fun View.prepareFloatingWidgetAnimator(): ObjectAnimator {
     return animator
 }
 
-private fun findChild(target: AccessibilityNodeInfo, nextChild: AccessibilityNodeInfo?): Boolean {
-    val i = nextChild?.childCount ?: 0
-    for (p in 0 until i) {
-        val child = nextChild?.getChild(p)
-        if (child != null) {
-            val childResourceName = child.viewIdResourceName
-            return if (childResourceName == target.viewIdResourceName) {
-                true
-            } else {
-                findChild(target, child)
-            }
-        }
+val AccessibilityNodeInfo.nodeInfoText: String
+    get() {
+        val contentDescription = contentDescription?.toString() ?: ""
+        return text?.toString()?.removeSuffix(contentDescription) ?: ""
     }
-    return false
-}
 
 private const val fabInitialX = 0
 private val fabInitialY = { context: Context -> ScreenUtils.screenSize(context).height / 2 }

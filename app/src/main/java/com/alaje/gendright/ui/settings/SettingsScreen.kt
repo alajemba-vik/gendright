@@ -27,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +49,7 @@ import com.alaje.gendright.utils.PermissionUtils
 import com.alaje.gendright.utils.PermissionUtils.canDrawOverApps
 import com.alaje.gendright.utils.PermissionUtils.isAccessibilityServiceEnabled
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
@@ -57,6 +59,7 @@ fun SettingsScreen(
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
 
     var permissionCheckJob: Job? = remember { null }
     var isFloatingWidgetEnabled by remember {
@@ -111,13 +114,15 @@ fun SettingsScreen(
                             // Ensure any existing coroutine is cancelled before starting a new one
                             permissionCheckJob?.cancel()
 
-                            permissionCheckJob = PermissionUtils.createDrawOverAppsPermissionJob(
-                                {
-                                    canDrawOverApps(context)
-                                },
-                                context,
-                                shouldEnable
-                            )
+                            permissionCheckJob = coroutineScope.launch {
+                                PermissionUtils.createDrawOverAppsPermissionJob(
+                                    {
+                                        canDrawOverApps(context)
+                                    },
+                                    context,
+                                    shouldEnable
+                                )
+                            }
 
                             PermissionUtils.openPermissionToDrawOverOtherAppsSettings(context)
                         },
@@ -132,11 +137,17 @@ fun SettingsScreen(
                             // Ensure any existing coroutine is cancelled before starting a new one
                             permissionCheckJob?.cancel()
 
-                            permissionCheckJob = PermissionUtils.createAccessibilityPermissionJob(
-                                context,
-                                hasAccessibilityPermission = { isAccessibilityServiceEnabled(context) },
-                                shouldEnable,
-                            )
+                            permissionCheckJob = coroutineScope.launch {
+                                PermissionUtils.createAccessibilityPermissionJob(
+                                    context,
+                                    hasAccessibilityPermission = {
+                                        isAccessibilityServiceEnabled(
+                                            context
+                                        )
+                                    },
+                                    shouldEnable,
+                                )
+                            }
 
                             PermissionUtils.openAccessibilitySettings(context)
 

@@ -9,11 +9,7 @@ import android.provider.Settings
 import android.widget.Toast
 import com.alaje.gendright.MainActivity
 import com.alaje.gendright.accessibility.GendRightService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 object PermissionUtils {
     fun canDrawOverApps(context: Context) = Settings.canDrawOverlays(context)
@@ -49,55 +45,47 @@ object PermissionUtils {
         (context as? Activity)?.startActivity(intent)
     }
 
-    fun createDrawOverAppsPermissionJob(
+    suspend fun createDrawOverAppsPermissionJob(
         canDrawOverApps: () -> Boolean,
         context: Context,
         shouldEnable: Boolean
-    ): Job {
+    ) {
 
         return monitorPermissionsState(
             context,
             shouldEnable,
             condition = canDrawOverApps,
-            onEnd = { }
         )
     }
 
-    fun createAccessibilityPermissionJob(
+    suspend fun createAccessibilityPermissionJob(
         context: Context,
         hasAccessibilityPermission: () -> Boolean,
         shouldEnable: Boolean,
-    ): Job {
-        return monitorPermissionsState(
+    ) {
+        monitorPermissionsState(
             context,
             shouldEnable,
             condition = hasAccessibilityPermission,
-            onEnd = {}
         )
     }
 
-    private fun monitorPermissionsState(
+    private suspend fun monitorPermissionsState(
         context: Context,
         shouldEnable: Boolean,
         condition: () -> Boolean,
-        onEnd: () -> Unit
-    ): Job {
-        return CoroutineScope(Dispatchers.Main).launch {
-
-            if (!shouldEnable) {
-                while (condition()) {
-                    delay(300)
-                }
-            } else {
-                while (!condition()) {
-                    delay(300)
-                }
+    ) {
+        if (!shouldEnable) {
+            while (condition()) {
+                delay(300)
             }
-
-            onEnd()
-
-            (context as? Activity)?.bringAppBackToTop()
+        } else {
+            while (!condition()) {
+                delay(300)
+            }
         }
+
+        (context as? Activity)?.bringAppBackToTop()
     }
 
     // Once permission is granted, bring the app to the foreground
