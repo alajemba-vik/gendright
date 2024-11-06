@@ -18,8 +18,6 @@ class BiasReader {
     suspend fun readText(text: String) {
         _response.value = DataResponse.Loading()
 
-        delay(1000)
-
         Log.d("GendRightService", "Processing text: $text")
 
         val cachedData = textFieldsCache[text]
@@ -28,6 +26,9 @@ class BiasReader {
             // Set the cached data
             _response.value = DataResponse.Success(cachedData)
         } else {
+            // To prevent making several requests to the API thereby hitting the quota limit
+            delay(3000)
+
             val response = AppContainer.instance?.aiClientAPIService?.processText(text)
 
             if (response != null) {

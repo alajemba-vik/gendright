@@ -148,9 +148,7 @@ class GendRightService : AccessibilityService() {
 
     }
 
-    override fun onInterrupt() {
-        processTextJob.cancel()
-    }
+    override fun onInterrupt() {}
 
     override fun onUnbind(intent: Intent?): Boolean {
         processTextJob.cancel()
