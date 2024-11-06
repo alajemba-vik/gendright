@@ -35,7 +35,7 @@ class BiasReader {
 
                 when (response) {
                     is DataResponse.Success -> {
-                        Log.d("BiasReader", "Success")
+                        Log.d("BiasReader", "Success ${response.data}")
                         // Cache the transformed text
                         response.data?.let { textFieldsCache[text] = it }
                     }

@@ -1,21 +1,13 @@
 package com.alaje.gendright.ui.settings
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -23,25 +15,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alaje.gendright.R
 import com.alaje.gendright.ui.components.ActionButton
 import com.alaje.gendright.ui.components.GendrightLogo
@@ -54,7 +40,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     onQuickTest: () -> Unit,
-    viewModel: SettingsViewModel = viewModel()
 ) {
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -68,8 +53,6 @@ fun SettingsScreen(
     var isAccessibilityFeatureEnabled by remember {
         mutableStateOf(isAccessibilityServiceEnabled(context))
     }
-
-    val autoSelectMostRelevant by viewModel.autoSelectMostRelevantState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -153,17 +136,6 @@ fun SettingsScreen(
 
                         },
                     )
-
-                    SettingsItem(
-                        title = stringResource(R.string.settings_auto_select_most_relevant_title),
-                        isSelected = autoSelectMostRelevant,
-                        onCheckChange = { shouldEnable ->
-                            viewModel.updateAutoSelectSettingsState(
-                                autoSelectMostRelevant = shouldEnable
-                            )
-                        },
-                        showDivider = false
-                    )
                 }
             }
 
@@ -179,42 +151,6 @@ fun SettingsScreen(
         onPauseOrDispose {}
     }
 }
-
-@Composable
-private fun WalkthroughOverlay() {
-    val highlightIndicatorColor = MaterialTheme.colorScheme.surfaceBright
-    val highlightSize = dimensionResource(id = R.dimen.floating_widget_highlight_indicator_size)
-
-    val infiniteTransition = rememberInfiniteTransition(label = "animateFAB")
-
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 0.9f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "highlightInfiniteAnimation"
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colorResource(id = R.color.overlay_color))
-    ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .scale(scale)
-                .background(highlightIndicatorColor, CircleShape)
-                .size(highlightSize)
-                .graphicsLayer {
-                    translationY = -45.dp.toPx()
-                }
-        )
-    }
-}
-// create shape where the botton looks like a hole
 
 
 @Composable
