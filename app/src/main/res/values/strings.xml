@@ -12,7 +12,7 @@
     <string name="onboarding_title_1">Fair Language for a Fairer World</string>
     <string name="onboarding_description_1">Identify and avoid gender-biased language in your writing, promoting more equitable and respectful communication.</string>
     <string name="onboarding_title_2">Real-time Gender Bias Detection</string>
-    <string name="onboarding_description_2">As you type, get alternative suggestions when potentially gender unsafe phrases are detected.</string>
+    <string name="onboarding_description_2">As you type on any application, get alternative suggestions when potentially gender unsafe phrases are detected.</string>
     <string name="onboarding_title_3">You’re in control right from the start</string>
     <string name="onboarding_description_3">Accept or refuse suggestions.\nYour text is processed locally on your own device and no information about you is shared or stored.</string>
     <string name="get_started">Get started</string>

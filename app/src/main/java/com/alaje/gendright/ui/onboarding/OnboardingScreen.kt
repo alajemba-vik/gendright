@@ -92,11 +92,6 @@ fun OnboardingScreen(onGetStarted: () -> Unit) {
                             title = stringResource(id = R.string.onboarding_title_2),
                             description = stringResource(id = R.string.onboarding_description_2),
                         )
-
-                        2 -> OnboardingContent(
-                            title = stringResource(id = R.string.onboarding_title_3),
-                            description = stringResource(id = R.string.onboarding_description_3),
-                        )
                     }
 
                 }
@@ -172,4 +167,4 @@ private fun OnboardingContent(
     }
 }
 
-private const val pageSize = 3
+private const val pageSize = 2
