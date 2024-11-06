@@ -52,4 +52,4 @@ Acknowledgments
 
 Acknowledgments
 ------------
-Gendright is licensed under the [MIT License]()
+Gendright is licensed under the [MIT License](https://github.com/alajemba-vik/gendright/blob/main/LICENSE)
