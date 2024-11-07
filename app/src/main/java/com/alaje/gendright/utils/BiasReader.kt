@@ -47,6 +47,7 @@ class BiasReader {
 
                     else -> {
                         Log.d("BiasReader", "API Error")
+                        delay(3000L)
                     }
                 }
             } else {

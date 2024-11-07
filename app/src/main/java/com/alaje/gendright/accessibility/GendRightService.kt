@@ -56,7 +56,8 @@ class GendRightService : AccessibilityService() {
                     AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT or
                     AccessibilityEvent.TYPE_VIEW_CLICKED or
                     AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED or
-                    AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+                    AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or
+                    AccessibilityEvent.TYPES_ALL_MASK
 
             feedbackType = AccessibilityServiceInfo.FEEDBACK_VISUAL
 
@@ -64,7 +65,8 @@ class GendRightService : AccessibilityService() {
                     AccessibilityServiceInfo.CAPABILITY_CAN_RETRIEVE_WINDOW_CONTENT or
                     AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS or
                     AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or
-                    AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE
+                    AccessibilityServiceInfo.FLAG_REQUEST_TOUCH_EXPLORATION_MODE or
+                    AccessibilityServiceInfo.DEFAULT
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 flags = flags or AccessibilityServiceInfo.FLAG_INPUT_METHOD_EDITOR or
@@ -161,4 +163,4 @@ class GendRightService : AccessibilityService() {
     }
 }
 
-private const val accessibilityEventsTimeout = 300L
+private const val accessibilityEventsTimeout = 100L

@@ -10,6 +10,7 @@ import com.google.firebase.vertexai.type.RequestOptions
 import com.google.firebase.vertexai.type.SafetySetting
 import com.google.firebase.vertexai.type.generationConfig
 import com.google.firebase.vertexai.vertexAI
+import kotlinx.coroutines.delay
 import java.net.UnknownHostException
 import kotlin.time.Duration.Companion.seconds
 
@@ -34,27 +35,51 @@ class AIClientAPIService {
         )
     )
 
-    suspend fun processText(inputText: String): DataResponse<AIClientAPIResponse> {
+    suspend fun processText(inputText: String, maxRetries: Int = 3): DataResponse<AIClientAPIResponse> {
+        var attempt = 0
+        var retryDelay = initialRetryDelay
 
-        return try {
-            Log.d("AIClientAPIService", "Interacting with AI model for text: $inputText")
+        while (attempt < maxRetries) {
 
-            val response = model.generateContent(createPrompt(inputText))
+            try {
+                Log.d("AIClientAPIService", "Interacting with AI model for text: $inputText")
 
-            Log.d("AIClientAPIService", "Response: ${response.text}")
+                val response = model.generateContent(createPrompt(inputText))
 
-            val apiResponse = AIClientAPIResponse.fromJSON(response.text ?: "")
+                Log.d("AIClientAPIService", "Response: ${response.text}")
 
-            return DataResponse.Success(apiResponse)
+                val apiResponse = AIClientAPIResponse.fromJSON(response.text ?: "")
 
-        } catch (e: Exception) {
-            Log.e("AIClientAPIService", "Error: ${e.message}")
-            if (e.cause is UnknownHostException) {
-                DataResponse.NetworkError("No internet connection")
-            } else {
-                DataResponse.APIError("An error occurred")
+                return DataResponse.Success(apiResponse)
+
+            } catch (e: Exception) {
+                Log.e("AIClientAPIService", "Error: ${e.message}")
+
+                when (e.cause) {
+                    is java.util.concurrent.CancellationException -> {
+                        return DataResponse.Idle()
+                    }
+
+                    is UnknownHostException -> {
+                        return DataResponse.NetworkError("No internet connection")
+                    }
+
+                    else -> {
+                        attempt++
+
+                        if (attempt < maxRetries) {
+                            delay(retryDelay)
+
+                            retryDelay = (retryDelay * backoffFactor).toLong()
+                        } else {
+                            return DataResponse.APIError("An error occurred${e.cause}")
+                        }
+                    }
+                }
             }
         }
+
+        return DataResponse.APIError("We couldn't analyze your text. Please tap the floating Gendright to retry.")
     }
 
     private fun createPrompt(inputText: String) =
@@ -86,3 +111,6 @@ the output should be:
 You must set the suggestions in the JSON as an empty list if there are no suggestions.
         """
 }
+
+private const val initialRetryDelay = 3000L
+private const val backoffFactor = 2.0
