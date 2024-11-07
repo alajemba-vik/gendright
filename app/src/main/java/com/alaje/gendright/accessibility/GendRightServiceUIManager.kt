@@ -25,10 +25,7 @@ import com.alaje.gendright.R
 import com.alaje.gendright.data.models.DataResponse
 import com.alaje.gendright.utils.BiasReader
 import com.alaje.gendright.utils.ScreenUtils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 class GendRightServiceUIManager(
     private val gendRightService: GendRightService,
@@ -42,6 +39,9 @@ class GendRightServiceUIManager(
     var floatingWidgetLayout: View? = null
     private var floatingWidgetAnimator: ObjectAnimator? = null
     private var isUserMovingFAB = false
+
+    private var importantMessageTextView: TextView? = null
+    private var displayImportantMessageJob: Job? = null
 
     var suggestionsLayout: View? = null
     private var suggestionTextView1: TextView? = null
@@ -64,10 +64,7 @@ class GendRightServiceUIManager(
             val sizeInPx = gendRightService.resources.getDimensionPixelSize(
                 R.dimen.floating_widget_parent_size
             )
-            val params = createParams(
-                width = sizeInPx,
-                height = sizeInPx
-            )
+            val params = createParams()
 
             params.gravity = fabGravity
             params.x = fabInitialX
@@ -89,6 +86,10 @@ class GendRightServiceUIManager(
                     displaySuggestionsWidget()
                     toggleUnreadIndicator(false)
                 } else {
+
+                    if (isAPIErrorIndicatorVisible()) {
+                        displayImportantMessageForShortTime()
+                    }
                     suggestionsLayout?.visibility = View.GONE
                 }
             }
@@ -144,6 +145,39 @@ class GendRightServiceUIManager(
         }
     }
 
+    private fun displayImportantMessageForShortTime() {
+        val result = biasReader.response.value
+
+        if (result is DataResponse.APIError) {
+            if (importantMessageTextView == null) {
+                importantMessageTextView = floatingWidgetLayout?.findViewById(R.id.important_message_textview)
+            }
+
+            importantMessageTextView?.apply {
+                text = result.message.ifBlank {
+                    context.getString(R.string.api_error_default_message)
+                }
+                setOnClickListener {
+                    importantMessageTextView?.visibility = View.GONE
+                }
+
+                visibility = View.VISIBLE
+
+            }
+
+            displayImportantMessageJob?.cancel()
+            displayImportantMessageJob = coroutineScope.launch {
+                delay(4000L)
+                withContext(Dispatchers.Main){
+                    importantMessageTextView?.visibility = View.GONE
+                    toggleAPIErrorIndicator(false)
+                }
+            }
+        }
+
+
+    }
+
     fun displayOnboardingHighlightUI() {
         displayOnboardingOverlay()
 
@@ -197,6 +231,8 @@ class GendRightServiceUIManager(
         if (suggestionsLayout == null) {
             suggestionsLayout = layoutInflater.inflate(R.layout.suggestions_layout, null)
 
+            suggestionsLayout?.setupSuggestionsView()
+
             val params = createParams(
                 width = WindowManager.LayoutParams.MATCH_PARENT,
             )
@@ -204,16 +240,10 @@ class GendRightServiceUIManager(
             params.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
             params.x = 0
 
-            suggestionsLayout?.apply {
-                setupSuggestionsView()
-            }
-
             windowManager.addView(suggestionsLayout, params)
 
         } else {
-            suggestionsLayout?.apply {
-                setupSuggestionsView()
-            }
+            suggestionsLayout?.setupSuggestionsView()
 
             suggestionsLayout?.visibility = View.VISIBLE
         }
@@ -237,6 +267,10 @@ class GendRightServiceUIManager(
     private fun toggleAPIErrorIndicator(show: Boolean) {
         floatingWidgetLayout?.findViewById<View>(R.id.api_error_indicator)
             ?.visibility = if (!show) View.GONE else View.VISIBLE
+    }
+
+    private fun isAPIErrorIndicatorVisible(): Boolean {
+        return floatingWidgetLayout?.findViewById<View>(R.id.api_error_indicator)?.isVisible == true
     }
 
     fun hasClickedOutside(event: AccessibilityEvent?): Boolean {
@@ -292,6 +326,9 @@ class GendRightServiceUIManager(
 
         findViewById<ImageButton>(R.id.close_suggestions_bottomsheet)?.setOnClickListener {
             suggestionsLayout?.visibility = View.GONE
+            if (lastEventAccessibilityNodeInfo?.isFocused == true && floatingWidgetLayout?.isVisible == false){
+                displayFloatingWidget()
+            }
         }
 
         findViewById<Button>(R.id.accept_suggestion_positive_button)?.setOnClickListener {
@@ -332,9 +369,7 @@ class GendRightServiceUIManager(
             biasReader.response.collect {
                 if (it is DataResponse.Loading) {
 
-                    toggleUnreadIndicator(false)
-                    toggleAPIErrorIndicator(false)
-                    toggleNoInternetIndicator(false)
+                    clearExtraUIState()
 
                     floatingWidgetAnimator?.start()
 
@@ -342,9 +377,9 @@ class GendRightServiceUIManager(
                     floatingWidgetAnimator?.end()
 
                     if (it is DataResponse.Success && !it.data?.suggestions.isNullOrEmpty()) {
-                        toggleUnreadIndicator(true)
                         toggleAPIErrorIndicator(false)
                         toggleNoInternetIndicator(false)
+                        toggleUnreadIndicator(true)
                     } else {
                         if (it is DataResponse.NetworkError) {
                             toggleNoInternetIndicator(true)
@@ -352,8 +387,6 @@ class GendRightServiceUIManager(
                             toggleNoInternetIndicator(false)
                         } else if (it is DataResponse.APIError) {
                             toggleAPIErrorIndicator(true)
-                            delay(5000L)
-                            toggleAPIErrorIndicator(false)
                         }
 
                     }
@@ -361,6 +394,14 @@ class GendRightServiceUIManager(
                 }
             }
         }
+    }
+
+    private fun clearExtraUIState() {
+        toggleUnreadIndicator(false)
+        toggleAPIErrorIndicator(false)
+        toggleNoInternetIndicator(false)
+
+        importantMessageTextView?.visibility = View.GONE
     }
 
     fun onDestroy() {
