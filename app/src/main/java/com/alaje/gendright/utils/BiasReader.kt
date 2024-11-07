@@ -27,7 +27,7 @@ class BiasReader {
             _response.value = DataResponse.Success(cachedData)
         } else {
             // To prevent making several requests to the API thereby hitting the quota limit
-            delay(3000)
+            delay(4000)
 
             val response = AppContainer.instance?.aiClientAPIService?.processText(text)
 

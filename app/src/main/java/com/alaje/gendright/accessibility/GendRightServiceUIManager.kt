@@ -270,6 +270,10 @@ class GendRightServiceUIManager(
         val activeCard = getDrawableResource(R.drawable.suggestion_card_active)
         val inactiveCard = getDrawableResource(R.drawable.suggestion_card_inactive)
 
+        suggestionTextView1?.background = activeCard
+        suggestionTextView2?.background = inactiveCard
+        suggestionTextView3?.background = inactiveCard
+
         suggestionTextView1?.setOnClickListener {
             suggestionTextView1?.background = activeCard
             suggestionTextView2?.background = inactiveCard
