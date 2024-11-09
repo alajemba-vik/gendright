@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.content.Context
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
@@ -15,6 +16,7 @@ import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityWindowInfo
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
@@ -105,8 +107,8 @@ class GendRightServiceUIManager(
                             MotionEvent.ACTION_DOWN -> {
                                 initialX = params.x
                                 initialY = params.y
-                                initialTouchX = event.rawX
-                                initialTouchY = event.rawY
+                                initialTouchX = event.rawX // 85
+                                initialTouchY = event.rawY // 1410
                                 return true
                             }
 
@@ -114,7 +116,10 @@ class GendRightServiceUIManager(
                                 params.x = initialX + (event.rawX - initialTouchX).toInt()
                                 params.y = initialY + (event.rawY - initialTouchY).toInt()
                                 windowManager.updateViewLayout(floatingWidgetLayout, params)
-                                isUserMovingFAB = true
+
+                                if (event.rawX != initialTouchX) {
+                                    isUserMovingFAB = true
+                                }
                                 return true
                             }
 
@@ -231,10 +236,18 @@ class GendRightServiceUIManager(
         if (suggestionsLayout == null) {
             suggestionsLayout = layoutInflater.inflate(R.layout.suggestions_layout, null)
 
+            val window = gendRightService.windows.firstOrNull {
+                it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD
+            }
+            val keyboardHeight = Rect().apply {
+                window?.getBoundsInScreen(this)
+            }.height()
+
             suggestionsLayout?.setupSuggestionsView()
 
             val params = createParams(
                 width = WindowManager.LayoutParams.MATCH_PARENT,
+                height = keyboardHeight
             )
 
             params.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
@@ -444,8 +457,13 @@ private fun View.prepareFloatingWidgetAnimator(): ObjectAnimator {
 
 val AccessibilityNodeInfo.nodeInfoText: String
     get() {
-        val contentDescription = contentDescription?.toString() ?: ""
-        return text?.toString()?.removeSuffix(contentDescription) ?: ""
+        val contentDescription = contentDescription?.toString()?.trim() ?: ""
+        val currentText = text?.toString()?.trim() ?: ""
+        if (contentDescription == currentText) {
+            return currentText
+        } else {
+            return text?.toString()?.removeSuffix(contentDescription) ?: ""
+        }
     }
 
 private const val fabInitialX = 0
