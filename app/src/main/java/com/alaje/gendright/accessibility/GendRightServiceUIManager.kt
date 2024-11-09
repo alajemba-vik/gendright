@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.content.Context
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
@@ -15,6 +16,7 @@ import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.view.accessibility.AccessibilityWindowInfo
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
@@ -25,10 +27,7 @@ import com.alaje.gendright.R
 import com.alaje.gendright.data.models.DataResponse
 import com.alaje.gendright.utils.BiasReader
 import com.alaje.gendright.utils.ScreenUtils
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 class GendRightServiceUIManager(
     private val gendRightService: GendRightService,
@@ -42,6 +41,9 @@ class GendRightServiceUIManager(
     var floatingWidgetLayout: View? = null
     private var floatingWidgetAnimator: ObjectAnimator? = null
     private var isUserMovingFAB = false
+
+    private var importantMessageTextView: TextView? = null
+    private var displayImportantMessageJob: Job? = null
 
     var suggestionsLayout: View? = null
     private var suggestionTextView1: TextView? = null
@@ -64,10 +66,7 @@ class GendRightServiceUIManager(
             val sizeInPx = gendRightService.resources.getDimensionPixelSize(
                 R.dimen.floating_widget_parent_size
             )
-            val params = createParams(
-                width = sizeInPx,
-                height = sizeInPx
-            )
+            val params = createParams()
 
             params.gravity = fabGravity
             params.x = fabInitialX
@@ -89,6 +88,10 @@ class GendRightServiceUIManager(
                     displaySuggestionsWidget()
                     toggleUnreadIndicator(false)
                 } else {
+
+                    if (isAPIErrorIndicatorVisible()) {
+                        displayImportantMessageForShortTime()
+                    }
                     suggestionsLayout?.visibility = View.GONE
                 }
             }
@@ -104,8 +107,8 @@ class GendRightServiceUIManager(
                             MotionEvent.ACTION_DOWN -> {
                                 initialX = params.x
                                 initialY = params.y
-                                initialTouchX = event.rawX
-                                initialTouchY = event.rawY
+                                initialTouchX = event.rawX // 85
+                                initialTouchY = event.rawY // 1410
                                 return true
                             }
 
@@ -113,7 +116,10 @@ class GendRightServiceUIManager(
                                 params.x = initialX + (event.rawX - initialTouchX).toInt()
                                 params.y = initialY + (event.rawY - initialTouchY).toInt()
                                 windowManager.updateViewLayout(floatingWidgetLayout, params)
-                                isUserMovingFAB = true
+
+                                if (event.rawX != initialTouchX) {
+                                    isUserMovingFAB = true
+                                }
                                 return true
                             }
 
@@ -142,6 +148,39 @@ class GendRightServiceUIManager(
         } else {
             floatingWidgetLayout?.visibility = View.VISIBLE
         }
+    }
+
+    private fun displayImportantMessageForShortTime() {
+        val result = biasReader.response.value
+
+        if (result is DataResponse.APIError) {
+            if (importantMessageTextView == null) {
+                importantMessageTextView = floatingWidgetLayout?.findViewById(R.id.important_message_textview)
+            }
+
+            importantMessageTextView?.apply {
+                text = result.message.ifBlank {
+                    context.getString(R.string.api_error_default_message)
+                }
+                setOnClickListener {
+                    importantMessageTextView?.visibility = View.GONE
+                }
+
+                visibility = View.VISIBLE
+
+            }
+
+            displayImportantMessageJob?.cancel()
+            displayImportantMessageJob = coroutineScope.launch {
+                delay(4000L)
+                withContext(Dispatchers.Main){
+                    importantMessageTextView?.visibility = View.GONE
+                    toggleAPIErrorIndicator(false)
+                }
+            }
+        }
+
+
     }
 
     fun displayOnboardingHighlightUI() {
@@ -197,23 +236,27 @@ class GendRightServiceUIManager(
         if (suggestionsLayout == null) {
             suggestionsLayout = layoutInflater.inflate(R.layout.suggestions_layout, null)
 
+            val window = gendRightService.windows.firstOrNull {
+                it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD
+            }
+            val keyboardHeight = Rect().apply {
+                window?.getBoundsInScreen(this)
+            }.height()
+
+            suggestionsLayout?.setupSuggestionsView()
+
             val params = createParams(
                 width = WindowManager.LayoutParams.MATCH_PARENT,
+                height = keyboardHeight
             )
 
             params.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
             params.x = 0
 
-            suggestionsLayout?.apply {
-                setupSuggestionsView()
-            }
-
             windowManager.addView(suggestionsLayout, params)
 
         } else {
-            suggestionsLayout?.apply {
-                setupSuggestionsView()
-            }
+            suggestionsLayout?.setupSuggestionsView()
 
             suggestionsLayout?.visibility = View.VISIBLE
         }
@@ -237,6 +280,10 @@ class GendRightServiceUIManager(
     private fun toggleAPIErrorIndicator(show: Boolean) {
         floatingWidgetLayout?.findViewById<View>(R.id.api_error_indicator)
             ?.visibility = if (!show) View.GONE else View.VISIBLE
+    }
+
+    private fun isAPIErrorIndicatorVisible(): Boolean {
+        return floatingWidgetLayout?.findViewById<View>(R.id.api_error_indicator)?.isVisible == true
     }
 
     fun hasClickedOutside(event: AccessibilityEvent?): Boolean {
@@ -292,6 +339,9 @@ class GendRightServiceUIManager(
 
         findViewById<ImageButton>(R.id.close_suggestions_bottomsheet)?.setOnClickListener {
             suggestionsLayout?.visibility = View.GONE
+            if (lastEventAccessibilityNodeInfo?.isFocused == true && floatingWidgetLayout?.isVisible == false){
+                displayFloatingWidget()
+            }
         }
 
         findViewById<Button>(R.id.accept_suggestion_positive_button)?.setOnClickListener {
@@ -332,9 +382,7 @@ class GendRightServiceUIManager(
             biasReader.response.collect {
                 if (it is DataResponse.Loading) {
 
-                    toggleUnreadIndicator(false)
-                    toggleAPIErrorIndicator(false)
-                    toggleNoInternetIndicator(false)
+                    clearExtraUIState()
 
                     floatingWidgetAnimator?.start()
 
@@ -342,9 +390,9 @@ class GendRightServiceUIManager(
                     floatingWidgetAnimator?.end()
 
                     if (it is DataResponse.Success && !it.data?.suggestions.isNullOrEmpty()) {
-                        toggleUnreadIndicator(true)
                         toggleAPIErrorIndicator(false)
                         toggleNoInternetIndicator(false)
+                        toggleUnreadIndicator(true)
                     } else {
                         if (it is DataResponse.NetworkError) {
                             toggleNoInternetIndicator(true)
@@ -352,8 +400,6 @@ class GendRightServiceUIManager(
                             toggleNoInternetIndicator(false)
                         } else if (it is DataResponse.APIError) {
                             toggleAPIErrorIndicator(true)
-                            delay(5000L)
-                            toggleAPIErrorIndicator(false)
                         }
 
                     }
@@ -361,6 +407,14 @@ class GendRightServiceUIManager(
                 }
             }
         }
+    }
+
+    private fun clearExtraUIState() {
+        toggleUnreadIndicator(false)
+        toggleAPIErrorIndicator(false)
+        toggleNoInternetIndicator(false)
+
+        importantMessageTextView?.visibility = View.GONE
     }
 
     fun onDestroy() {
@@ -403,8 +457,13 @@ private fun View.prepareFloatingWidgetAnimator(): ObjectAnimator {
 
 val AccessibilityNodeInfo.nodeInfoText: String
     get() {
-        val contentDescription = contentDescription?.toString() ?: ""
-        return text?.toString()?.removeSuffix(contentDescription) ?: ""
+        val contentDescription = contentDescription?.toString()?.trim() ?: ""
+        val currentText = text?.toString()?.trim() ?: ""
+        if (contentDescription == currentText) {
+            return currentText
+        } else {
+            return text?.toString()?.removeSuffix(contentDescription) ?: ""
+        }
     }
 
 private const val fabInitialX = 0

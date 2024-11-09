@@ -207,7 +207,8 @@ private fun SettingsItemDescription(
         text = description,
         style = MaterialTheme.typography.bodySmall
             .copy(
-                fontSize = MaterialTheme.typography.labelSmall.fontSize
+                fontSize = MaterialTheme.typography.labelSmall.fontSize,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
             ),
         modifier = modifier
             .fillMaxWidth()

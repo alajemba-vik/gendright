@@ -1,8 +1,18 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    alias(libs.plugins.google.services)
 }
+
+
+val gendRightPropertiesFile = rootProject.file("gendright.properties")
+val gendRightProperties = Properties().apply {
+    if (gendRightPropertiesFile.exists()) {
+        load(gendRightPropertiesFile.inputStream())
+    }
+}
+val geminiAPIkey = gendRightProperties.getProperty("geminiAPIkey")
 
 android {
     namespace = "com.alaje.gendright"
@@ -19,6 +29,12 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField(
+            "String",
+            "geminiAPIkey",
+            "\"$geminiAPIkey\""
+        )
     }
 
     buildTypes {
@@ -71,7 +87,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    implementation(platform(libs.firebase.bom))
-
-    implementation(libs.firebase.vertexai)
+    implementation(libs.google.ai.client.generativeai)
 }
