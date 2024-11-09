@@ -9,14 +9,13 @@ Features
 - **Seamless Integration**: Works across Android apps with an accessible floating icon that users can tap to see suggestions.
 - **Customizable Feedback**: Users can select and edit suggestions, fostering a more conscious and respectful communication style.
 
-How It Works
+How it works
 ------------
 
-GendRight uses Vertex AI Gemini API with the Gemini 1.5 Flash model to analyze text and offer relevant suggestions. Built with Firebase, the app ensures secure interaction with the model. The app's implements dynamic theming to really provide users a more personal and safe feeling.
+GendRight uses Google AI client SDK with the Gemini 1.5 Flash model to analyze text and offer relevant suggestions. The app's implements dynamic colors to really provide users a more personal and safer feeling.
 
-Getting Started
+Getting started on testing locally
 ------------
-Test Gendright locally
 
 ## Prerequisites
 
@@ -26,8 +25,12 @@ Test Gendright locally
 
 ## Setup
 
-- [Set up Firebase and connect to Vertex AI](https://firebase.google.com/docs/vertex-ai/get-started?platform=android#set-up-firebase).
-- Build to run Gendright on a physical Android device or emulator
+- You need an API key, and this can be created easily on Google AI Studio. The [docs](https://developer.android.com/ai/google-ai-client-sdk#generate-api-key) contain more info about this.
+- Create a gendright.properties file in the root of your project, and place your API key in that file with the variable name `geminiAPIkey`. This is how the end result should look like in the gendright.properties file:
+    ```
+    geminiAPIkey=[your API key]
+  ```
+  where your API key replaces `[your API key]`
 
 Technologies
 ------------
@@ -35,7 +38,7 @@ Technologies
 - Android
 - Jetpack Compose with Kotlin
 - Android Views with Kotlin
-- Vertex AI in Firebase (Gemini API)
+- Google AI Client SDK
 
 Contributing to Gendright
 ------------
@@ -50,6 +53,6 @@ Acknowledgments
 - Grateful to the Google team for making Gemini accessible
 - Special thanks to my primary source of inspiration - Grammarly. 
 
-Acknowledgments
+License
 ------------
 Gendright is licensed under the [MIT License](https://github.com/alajemba-vik/gendright/blob/main/LICENSE)
