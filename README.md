@@ -24,7 +24,8 @@ Getting started on testing locally
 
 ### Setup
 
-- You need an API key, and this can be created easily on Google AI Studio. The [docs](https://developer.android.com/ai/google-ai-client-sdk#generate-api-key) contain more info about this.
+- Clone or download the `gendright` repo to get the source code on your machine
+- Get an API key: This can be created easily on [Google AI Studio](https://aistudio.google.com/apikey). The [docs](https://developer.android.com/ai/google-ai-client-sdk#generate-api-key) contain more info about this.
 - Create a gendright.properties file in the root of your project, and place your API key in that file with the variable name `geminiAPIkey`. This is how the end result should look like in the gendright.properties file:
     ```
     geminiAPIkey=[your API key]
