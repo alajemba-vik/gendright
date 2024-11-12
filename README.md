@@ -31,7 +31,7 @@ Getting started on testing locally
     geminiAPIkey=[your API key]
   ```
   where your API key replaces `[your API key]`
-- Build and run the application  
+- Build and run the application from the `main` branch
 
 Technologies
 ------------
