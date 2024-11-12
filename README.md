@@ -17,13 +17,13 @@ GendRight uses Google AI client SDK with the Gemini 1.5 Flash model to analyze t
 Getting started on testing locally
 ------------
 
-## Prerequisites
+### Prerequisites
 
 - Kotlin knowledge
 - Ability to use Android Studio and test apps in an emulator or physical device running Android API level 24 or higher
 - A Firebase project connected to Gendright
 
-## Setup
+### Setup
 
 - You need an API key, and this can be created easily on Google AI Studio. The [docs](https://developer.android.com/ai/google-ai-client-sdk#generate-api-key) contain more info about this.
 - Create a gendright.properties file in the root of your project, and place your API key in that file with the variable name `geminiAPIkey`. This is how the end result should look like in the gendright.properties file:
