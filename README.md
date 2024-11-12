@@ -52,7 +52,7 @@ Author
 Acknowledgments
 ------------
 - Grateful to the Google team for making Gemini accessible
-- Special thanks to my primary source of inspiration - Grammarly. 
+- Special thanks to one of my sources of inspiration - Grammarly. 
 
 License
 ------------
