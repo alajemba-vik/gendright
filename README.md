@@ -21,7 +21,6 @@ Getting started on testing locally
 
 - Kotlin knowledge
 - Ability to use Android Studio and test apps in an emulator or physical device running Android API level 24 or higher
-- A Firebase project connected to Gendright
 
 ### Setup
 
